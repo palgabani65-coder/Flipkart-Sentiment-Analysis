@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base API instance (Configurable to point to real Python FastAPI / Flask backend or fallback mock)
-const API_BASE_URL = localStorage.getItem('fk_api_url') || 'http://localhost:8000/api/v1';
+const API_BASE_URL = localStorage.getItem('fk_api_url') || 'http://localhost:8000/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

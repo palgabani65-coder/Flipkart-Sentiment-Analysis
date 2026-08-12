@@ -64,13 +64,17 @@ cover/
 .ipynb_checkpoints/
 
 # Environments
-.env
+*.env
+.env*
+atlas-credentials.env
+atlas_credential.env
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
 
 # IDE / OS junk
 .DS_Store
