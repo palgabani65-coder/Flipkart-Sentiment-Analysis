@@ -81,16 +81,23 @@ Running `python backend/scripts/train_model.py` produces deployment-ready artifa
 
 ---
 
-## 🍃 MongoDB Atlas Configuration (Optional)
+## 🐘 PostgreSQL Configuration (Optional)
 
-To connect to a live MongoDB Atlas cluster:
+To connect to a live PostgreSQL database server (Supabase, Neon, RDS, or local Postgres):
 
-1. Create a `.env` file in the project root:
+1. Create a `.env` file in `backend/` or project root:
    ```env
-   MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.example.mongodb.net/?retryWrites=true&w=majority
-   DB_NAME=flipkart_sentiment_db
+   POSTGRES_URI=postgresql://postgres:postgres@localhost:5432/flipkart_sentiment_db
+   POSTGRES_HOST=localhost
+   POSTGRES_PORT=5432
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=postgres
+   POSTGRES_DB=flipkart_sentiment_db
    ```
-2. Re-run `python backend/scripts/run_pipeline.py`.
+2. Re-run `python backend/scripts/run_pipeline.py` or start the REST API server:
+   ```bash
+   uvicorn backend.main:app --reload --port 8000
+   ```
 
 ---
 

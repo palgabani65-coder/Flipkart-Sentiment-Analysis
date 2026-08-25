@@ -54,12 +54,23 @@ REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 VISUALIZATIONS_DIR.mkdir(parents=True, exist_ok=True)
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Database Configuration (MongoDB Atlas with local fallback)
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-DB_NAME = os.getenv("DB_NAME", "FlipSentiment")
-REVIEWS_COLLECTION = "reviews"
-EDA_METRICS_COLLECTION = "eda_metrics"
-USERS_COLLECTION = "users"
+# Database Configuration (PostgreSQL with local fallback)
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", 5432))
+POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
+POSTGRES_DB = os.getenv("POSTGRES_DB", "flipkart_sentiment_db")
+POSTGRES_URI = os.getenv(
+    "POSTGRES_URI",
+    f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+)
+
+# Table Names
+REVIEWS_TABLE = "reviews"
+EDA_METRICS_TABLE = "eda_metrics"
+USERS_TABLE = "users"
+OTPS_TABLE = "otps"
+
 
 
 # JWT Authentication Configuration

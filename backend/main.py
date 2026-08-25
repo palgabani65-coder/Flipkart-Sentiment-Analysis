@@ -104,9 +104,45 @@ if FASTAPI_AVAILABLE:
         return {
             "status": "healthy" if model_loaded else "degraded",
             "database_connected": db_connected,
-            "model_loaded": model_loaded,
-            "database_name": config.DB_NAME
+            "database_type": "postgresql",
+            "database_name": config.POSTGRES_DB,
+            "model_loaded": model_loaded
         }
+
+    @app.get("/api/db-stats")
+    def get_db_stats():
+        """Retrieve total user count, total review count, and pending OTP stats."""
+        return db_manager.get_database_stats()
+
+    class UpdateUserRequest(BaseModel):
+        name: Optional[str] = Field(None, description="Updated full name")
+        email: Optional[str] = Field(None, description="Updated email address")
+        role: Optional[str] = Field(None, description="Updated role (user or admin)")
+
+    @app.get("/api/users")
+    def get_all_users_list():
+        """Retrieve list of registered users."""
+        users = db_manager.get_all_users()
+        return {
+            "total_users": len(users),
+            "users": users
+        }
+
+    @app.put("/api/users/{user_id}")
+    def update_user_endpoint(user_id: str, req: UpdateUserRequest):
+        """Update user name, email, or role by user_id."""
+        success = db_manager.update_user_details(user_id, name=req.name, email=req.email, role=req.role)
+        if not success:
+            raise HTTPException(status_code=400, detail=f"User '{user_id}' could not be updated.")
+        return {"message": f"User '{user_id}' updated successfully.", "user_id": user_id}
+
+    @app.delete("/api/users/{user_id}")
+    def delete_user_endpoint(user_id: str):
+        """Delete user account by user_id."""
+        success = db_manager.delete_user(user_id)
+        if not success:
+            raise HTTPException(status_code=404, detail=f"User '{user_id}' not found.")
+        return {"message": f"User '{user_id}' deleted successfully.", "user_id": user_id}
 
     # REAL LIVE FLIPKART WEBSCRAPER ENDPOINT
     @app.post("/api/scrape-flipkart")
@@ -284,16 +320,25 @@ if FASTAPI_AVAILABLE:
                 raise HTTPException(status_code=400, detail="Invalid or expired OTP code.")
         
         hashed_pwd = auth.hash_password(req.password)
-        user_doc = db_manager.create_user(
-            name=req.name.strip(),
-            email=email_clean,
-            hashed_password=hashed_pwd,
-            role="user"
-        )
+        user_doc = db_manager.create_user({
+            "name": req.name.strip(),
+            "email": email_clean,
+            "password_hash": hashed_pwd,
+            "role": "user"
+        })
         
+        if not user_doc:
+            # Fallback if DB is offline during registration
+            user_doc = {
+                "id": f"usr_{abs(hash(email_clean)) % 10000}",
+                "name": req.name.strip(),
+                "email": email_clean,
+                "role": "user"
+            }
+
         token = auth.create_access_token(data={"sub": user_doc["email"], "role": user_doc["role"]})
         user_response = {
-            "id": user_doc["id"],
+            "id": str(user_doc.get("id", user_doc.get("_id", "usr_1"))),
             "name": user_doc["name"],
             "email": user_doc["email"],
             "role": user_doc["role"]
@@ -319,7 +364,7 @@ if FASTAPI_AVAILABLE:
             
             token = auth.create_access_token(data={"sub": user["email"], "role": user.get("role", "user")})
             user_response = {
-                "id": str(user.get("_id", user.get("id", "usr_1"))),
+                "id": str(user.get("id", user.get("_id", "usr_1"))),
                 "name": user.get("name", email_clean.split("@")[0].title()),
                 "email": user["email"],
                 "role": user.get("role", "user")
@@ -330,7 +375,11 @@ if FASTAPI_AVAILABLE:
                 "user": user_response
             }
 
-        # Seamless login fallback for demo / unregistered users / offline mode
+        if db_manager.is_connected():
+            # Real DB connected: reject unregistered users
+            raise HTTPException(status_code=401, detail="Invalid email or password. User account not found.")
+
+        # Seamless login fallback for offline mode only
         role = "admin" if "admin" in email_clean else "user"
         name = email_clean.split("@")[0].replace(".", " ").title()
         token = auth.create_access_token(data={"sub": email_clean, "role": role})
@@ -339,7 +388,7 @@ if FASTAPI_AVAILABLE:
             "access_token": token,
             "token_type": "bearer",
             "user": {
-                "id": f"usr_{hash(email_clean) % 10000}",
+                "id": f"usr_{abs(hash(email_clean)) % 10000}",
                 "name": name,
                 "email": email_clean,
                 "role": role,
