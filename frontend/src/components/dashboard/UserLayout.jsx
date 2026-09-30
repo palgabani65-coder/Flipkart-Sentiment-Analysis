@@ -19,13 +19,13 @@ export const UserLayout = ({ children, title, subtitle }) => {
       const next = !prev;
       try {
         localStorage.setItem('flipsentiment_sidebar_collapsed', JSON.stringify(next));
-      } catch (e) {}
+      } catch (e) { }
       return next;
     });
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F4F3F8] dark:bg-[#111116] text-slate-900 dark:text-white transition-colors duration-300 font-sans relative overflow-x-hidden">
+    <div className="min-h-screen flex bg-[#F8F9FA] dark:bg-[#121415] text-[#191C1D] dark:text-white transition-colors duration-300 font-sans relative overflow-x-hidden">
       {/* Reference-style Collapsible Sidebar */}
       <UserSidebar
         isOpen={isMobileOpen}
@@ -36,9 +36,8 @@ export const UserLayout = ({ children, title, subtitle }) => {
 
       {/* Main Workspace Container */}
       <div
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${
-          isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
-        }`}
+        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
+          }`}
       >
         <DashboardHeader
           title={title}

@@ -94,7 +94,7 @@ export const TypewriterEffect = ({
 
       {showCursor && (
         <span
-          className={`inline-block w-[3px] h-[0.9em] ml-1 rounded-full animate-pulse ${cursorClassName}`}
+          className={`inline-block w-[2.5px] sm:w-[3px] h-[0.9em] ml-1.5 rounded-full align-middle typewriter-cursor-blink ${cursorClassName}`}
           aria-hidden="true"
         />
       )}

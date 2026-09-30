@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ShieldAlert, ArrowLeft, LayoutDashboard } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export const RoleProtectedRoute = ({ children, allowedRoles = ['user', 'admin'] }) => {
+export const RoleProtectedRoute = ({ children, allowedRoles = ['user', 'admin'], adminRedirect }) => {
   const { user, isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
@@ -21,6 +21,12 @@ export const RoleProtectedRoute = ({ children, allowedRoles = ['user', 'admin'] 
   }
 
   const userRole = user?.role || 'user';
+
+  // If user is admin and this route specifies an admin redirect, send them there
+  if (userRole === 'admin' && adminRedirect && !allowedRoles.includes('admin')) {
+    return <Navigate to={adminRedirect} replace />;
+  }
+
   const hasAccess = allowedRoles.includes(userRole);
 
   if (!hasAccess) {

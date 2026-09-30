@@ -3,7 +3,7 @@ import { gsap } from 'gsap';
 
 const DEFAULT_PARTICLE_COUNT = 12;
 const DEFAULT_SPOTLIGHT_RADIUS = 300;
-const DEFAULT_GLOW_COLOR = '132, 0, 255';
+const DEFAULT_GLOW_COLOR = '123, 208, 255';
 const MOBILE_BREAKPOINT = 768;
 
 const cardData = [
@@ -491,12 +491,12 @@ const MagicBento = ({
             --glow-intensity: 0;
             --glow-radius: 200px;
             --glow-color: ${glowColor};
-            --border-color: #2F293A;
-            --background-dark: #120F17;
+            --border-color: #272a2c;
+            --background-dark: #0b0f10;
             --white: hsl(0, 0%, 100%);
-            --purple-primary: rgba(132, 0, 255, 1);
-            --purple-glow: rgba(132, 0, 255, 0.2);
-            --purple-border: rgba(132, 0, 255, 0.8);
+            --cyan-primary: rgba(123, 208, 255, 1);
+            --cyan-glow: rgba(123, 208, 255, 0.2);
+            --cyan-border: rgba(123, 208, 255, 0.8);
           }
           
           .card-responsive {
@@ -563,7 +563,7 @@ const MagicBento = ({
           }
           
           .card--border-glow:hover {
-            box-shadow: 0 4px 20px rgba(46, 24, 78, 0.4), 0 0 30px rgba(${glowColor}, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(${glowColor}, 0.2);
           }
           
           .particle::before {
@@ -579,7 +579,7 @@ const MagicBento = ({
           }
           
           .particle-container:hover {
-            box-shadow: 0 4px 20px rgba(46, 24, 78, 0.2), 0 0 30px rgba(${glowColor}, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 0 30px rgba(${glowColor}, 0.2);
           }
           
           .text-clamp-1 {

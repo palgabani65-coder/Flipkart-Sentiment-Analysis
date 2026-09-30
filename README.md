@@ -44,6 +44,27 @@ python backend/scripts/run_pipeline.py
 
 ---
 
+## ⚡ Unified Full-Stack Runner (Frontend + Backend)
+
+To run the **entire project** (FastAPI backend on port 8000 and React/Vite frontend on port 5173) concurrently in a single command:
+
+```bash
+python run.py
+```
+
+* **Frontend**: [http://localhost:5173](http://localhost:5173)
+* **Backend API**: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+* **Interactive API Docs**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+**Additional options:**
+```bash
+python run.py --open           # Auto-opens http://localhost:5173 in your default browser
+python run.py --backend-only   # Run only the FastAPI backend
+python run.py --frontend-only  # Run only the React/Vite frontend
+```
+
+---
+
 ## 🌐 Running the FastAPI Server
 
 To launch the interactive REST API backend server:

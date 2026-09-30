@@ -7,7 +7,7 @@ export const AdminLayout = ({ children, title, subtitle }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen flex bg-[#F4F3F8] dark:bg-[#111116] text-slate-900 dark:text-white transition-colors duration-300">
+    <div className="min-h-screen flex bg-[#F8F9FA] dark:bg-[#121415] text-[#191C1D] dark:text-white transition-colors duration-300 font-sans">
       {/* Admin Sidebar */}
       <AdminSidebar
         isOpen={isMobileOpen}

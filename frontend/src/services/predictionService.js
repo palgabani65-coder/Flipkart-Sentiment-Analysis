@@ -1,6 +1,7 @@
+import { api } from './api';
 import { MOCK_HISTORY } from './mockData';
 
-// Keywords dictionary for intelligent client-side sentiment evaluation fallback
+// Keywords dictionary for fallback aspect detection and offline mode
 const POSITIVE_KEYWORDS = [
   'great', 'excellent', 'amazing', 'awesome', 'best', 'love', 'fantastic', 'superb', 
   'flawless', 'smooth', 'fast', 'crisp', 'mindblowing', 'unbelievable', 'lightweight', 
@@ -24,95 +25,140 @@ const ASPECT_DICTIONARY = [
   { keywords: ['service', 'support', 'warranty', 'replacement'], name: 'Customer Service' },
 ];
 
+const extractAspects = (textLower, sentiment, confidence) => {
+  const detected = [];
+  ASPECT_DICTIONARY.forEach((aspectGroup) => {
+    const matched = aspectGroup.keywords.some((kw) => textLower.includes(kw));
+    if (matched) {
+      let aspectSentiment = sentiment;
+      const hasPos = POSITIVE_KEYWORDS.some((kw) => textLower.includes(kw));
+      const hasNeg = NEGATIVE_KEYWORDS.some((kw) => textLower.includes(kw));
+      if (hasPos && !hasNeg) aspectSentiment = 'Positive';
+      if (hasNeg && !hasPos) aspectSentiment = 'Negative';
+
+      detected.push({
+        name: aspectGroup.name,
+        sentiment: aspectSentiment,
+        score: Math.round(confidence - (Math.random() * 5))
+      });
+    }
+  });
+
+  if (detected.length === 0) {
+    detected.push({ name: 'General Impression', sentiment: sentiment, score: Math.round(confidence) });
+  }
+  return detected;
+};
+
 export const predictionService = {
   predictSingle: async (reviewText, productName = 'Generic Flipkart Item') => {
-    await new Promise((resolve) => setTimeout(resolve, 850));
-
-    if (!reviewText || reviewText.trim().length < 5) {
-      throw new Error('Please enter a review text with at least 5 characters.');
+    if (!reviewText || reviewText.trim().length < 3) {
+      throw new Error('Please enter review text with at least 3 characters.');
     }
 
-    const textLower = reviewText.toLowerCase();
-    
-    let posCount = 0;
-    let negCount = 0;
-
-    POSITIVE_KEYWORDS.forEach((word) => {
-      if (textLower.includes(word)) posCount++;
-    });
-
-    NEGATIVE_KEYWORDS.forEach((word) => {
-      if (textLower.includes(word)) negCount++;
-    });
+    const textTrimmed = reviewText.trim();
+    const textLower = textTrimmed.toLowerCase();
 
     let sentiment = 'Neutral';
     let confidence = 85.0;
+    let confidenceBreakdown = { positive: 33.3, neutral: 33.4, negative: 33.3 };
 
-    if (posCount > negCount) {
-      sentiment = 'Positive';
-      confidence = Math.min(99.4, 88.0 + posCount * 3.2 - negCount * 1.5);
-    } else if (negCount > posCount) {
-      sentiment = 'Negative';
-      confidence = Math.min(98.8, 86.5 + negCount * 3.5 - posCount * 1.2);
-    } else {
-      sentiment = 'Neutral';
-      confidence = 78.5 + Math.random() * 8;
-    }
+    try {
+      // Connect directly to FastAPI ML model backend
+      const res = await api.post('/predict', { text: textTrimmed });
+      const data = res.data;
 
-    // Aspect Detection
-    const detectedAspects = [];
-    ASPECT_DICTIONARY.forEach((aspectGroup) => {
-      const matched = aspectGroup.keywords.some((kw) => textLower.includes(kw));
-      if (matched) {
-        let aspectSentiment = sentiment;
-        // Check local context
-        const hasPos = POSITIVE_KEYWORDS.some((kw) => textLower.includes(kw));
-        const hasNeg = NEGATIVE_KEYWORDS.some((kw) => textLower.includes(kw));
-        if (hasPos && !hasNeg) aspectSentiment = 'Positive';
-        if (hasNeg && !hasPos) aspectSentiment = 'Negative';
+      const rawSentiment = data.sentiment || 'neutral';
+      sentiment = rawSentiment.charAt(0).toUpperCase() + rawSentiment.slice(1).toLowerCase();
 
-        detectedAspects.push({
-          name: aspectGroup.name,
-          sentiment: aspectSentiment,
-          score: Math.round(confidence - (Math.random() * 5))
-        });
+      if (data.confidence && typeof data.confidence === 'object') {
+        confidenceBreakdown = data.confidence;
+        const vals = Object.values(data.confidence);
+        const maxVal = Math.max(...vals);
+        confidence = parseFloat(maxVal.toFixed(1));
       }
-    });
+    } catch (err) {
+      console.warn('[Backend Prediction Fallback] Using offline client analysis:', err.message);
+      // Offline fallback keyword evaluation
+      let posCount = 0;
+      let negCount = 0;
+      POSITIVE_KEYWORDS.forEach((w) => { if (textLower.includes(w)) posCount++; });
+      NEGATIVE_KEYWORDS.forEach((w) => { if (textLower.includes(w)) negCount++; });
 
-    if (detectedAspects.length === 0) {
-      detectedAspects.push({ name: 'General Impression', sentiment: sentiment, score: Math.round(confidence) });
+      if (posCount > negCount) {
+        sentiment = 'Positive';
+        confidence = Math.min(99.4, 88.0 + posCount * 3.2 - negCount * 1.5);
+      } else if (negCount > posCount) {
+        sentiment = 'Negative';
+        confidence = Math.min(98.8, 86.5 + negCount * 3.5 - posCount * 1.2);
+      } else {
+        sentiment = 'Neutral';
+        confidence = 78.5;
+      }
     }
+
+    const detectedAspects = extractAspects(textLower, sentiment, confidence);
 
     const result = {
       id: 'pred_' + Date.now(),
-      reviewText: reviewText,
+      reviewText: textTrimmed,
       productName: productName,
       sentiment: sentiment,
       confidence: parseFloat(confidence.toFixed(1)),
+      confidenceBreakdown: confidenceBreakdown,
       aspects: detectedAspects,
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
     };
 
-    // Save to local history
     predictionService.saveToHistory(result);
-
     return result;
   },
 
   predictBatch: async (reviewsList) => {
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    if (!reviewsList || !reviewsList.length) return [];
 
-    const results = [];
-    for (let i = 0; i < reviewsList.length; i++) {
-      const item = reviewsList[i];
-      const text = typeof item === 'string' ? item : item.text;
-      const prod = typeof item === 'string' ? 'Batch Upload Review' : (item.productName || 'Batch Item');
-      
-      const pred = await predictionService.predictSingle(text, prod);
-      results.push(pred);
+    const stringList = reviewsList.map(item => typeof item === 'string' ? item : item.text);
+
+    try {
+      // Direct batch endpoint call to FastAPI
+      const res = await api.post('/predict/batch', { reviews: stringList });
+      const apiResults = res.data.results || [];
+
+      return apiResults.map((item, idx) => {
+        const rawSentiment = item.sentiment || 'neutral';
+        const sentiment = rawSentiment.charAt(0).toUpperCase() + rawSentiment.slice(1).toLowerCase();
+        let confidence = 85.0;
+        if (item.confidence && typeof item.confidence === 'object') {
+          confidence = Math.max(...Object.values(item.confidence));
+        }
+
+        const originalText = stringList[idx];
+        const productName = typeof reviewsList[idx] === 'object' && reviewsList[idx]?.productName 
+          ? reviewsList[idx].productName 
+          : 'Batch Flipkart Review';
+
+        return {
+          id: 'pred_' + Date.now() + '_' + idx,
+          reviewText: originalText,
+          productName: productName,
+          sentiment: sentiment,
+          confidence: parseFloat(confidence.toFixed(1)),
+          aspects: extractAspects(originalText.toLowerCase(), sentiment, confidence),
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        };
+      });
+    } catch (err) {
+      console.warn('[Batch Fallback] Calling predictSingle in sequence:', err.message);
+      const results = [];
+      for (let i = 0; i < reviewsList.length; i++) {
+        const item = reviewsList[i];
+        const text = typeof item === 'string' ? item : item.text;
+        const prod = typeof item === 'string' ? 'Batch Upload Review' : (item.productName || 'Batch Item');
+        const pred = await predictionService.predictSingle(text, prod);
+        results.push(pred);
+      }
+      return results;
     }
-
-    return results;
   },
 
   getHistory: () => {

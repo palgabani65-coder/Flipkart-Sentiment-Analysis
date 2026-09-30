@@ -89,12 +89,12 @@ export const InfiniteMovingCards = ({
               <div className="space-y-5 flex flex-col justify-between h-full">
                 <div className="flex items-center justify-between">
                   {item.icon && (
-                    <div className="w-12 h-12 rounded-2xl bg-neutral-800/90 border border-neutral-700/80 text-white flex items-center justify-center shadow-md group-hover:bg-white group-hover:text-black transition-all duration-300">
-                      <item.icon className="w-6 h-6" />
+                    <div className="w-10 h-10 rounded-xl bg-[#00a6e0]/15 border border-[#7bd0ff]/30 text-[#7bd0ff] flex items-center justify-center transition-all duration-300 group-hover:bg-[#00a6e0]/25 group-hover:border-[#7bd0ff]/50 group-hover:shadow-[0_0_16px_rgba(123,208,255,0.3)]">
+                      <item.icon className="w-5 h-5" />
                     </div>
                   )}
                   {item.badge && (
-                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-neutral-800/80 text-neutral-300 border border-neutral-700/70">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-[0.14em] bg-[#131719] text-[#bec6e0] border border-[#272a2c]">
                       {item.badge}
                     </span>
                   )}

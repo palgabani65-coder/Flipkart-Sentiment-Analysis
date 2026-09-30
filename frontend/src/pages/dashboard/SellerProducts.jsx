@@ -204,28 +204,28 @@ export const SellerProducts = () => {
   };
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-8 font-sans text-[#191C1D] dark:text-white transition-colors">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1 font-mono text-[10px]">
-            <span className="px-2 py-0.5 rounded-full bg-[#111116] dark:bg-[#2563EB] text-white font-bold uppercase flex items-center gap-1">
-              <Shield className="w-3 h-3" /> Isolated Store Catalog
+            <span className="px-2 py-0.5 rounded-full bg-[#000000] dark:bg-white text-white dark:text-black font-semibold uppercase flex items-center gap-1 shadow-xs">
+              <Shield className="w-3 h-3" /> Store Catalog
             </span>
-            <span className="text-slate-400 font-bold">• {user?.storeName || 'Gabani Electronics'}</span>
+            <span className="text-[#5C5F62] dark:text-[#A0A4A8]">• {user?.storeName || 'Apex Electronics'}</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">My Store Products</h2>
-          <p className="text-xs text-slate-500 dark:text-[#9494A8] mt-0.5 font-medium">Manage catalog items owned exclusively by {user?.storeName || 'your seller account'}.</p>
+          <h2 className="text-3xl font-bold text-[#191C1D] dark:text-white tracking-tight font-sans">My Store Products</h2>
+          <p className="text-xs text-[#5C5F62] dark:text-[#A0A4A8] mt-0.5 font-mono">Manage catalog items owned exclusively by {user?.storeName || 'your seller account'}.</p>
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-[#242432] text-slate-700 dark:text-slate-300 text-xs font-bold font-mono">
+          <span className="px-3.5 py-1.5 rounded-full bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132] text-[#191C1D] dark:text-white text-xs font-mono">
             {products.length} Store Products
           </span>
 
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 rounded-xl bg-[#111116] hover:bg-black dark:bg-[#2563EB] dark:hover:bg-[#1D4ED8] text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-transform hover:scale-[1.02]"
+            className="px-4 py-2 rounded-lg bg-[#000000] dark:bg-white text-white dark:text-black text-xs font-mono hover:bg-[#1B1B1B] dark:hover:bg-slate-100 transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add New Product</span>
@@ -234,17 +234,17 @@ export const SellerProducts = () => {
       </div>
 
       {/* Filters */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-[#1C1C26] border border-[#E6E4F0] dark:border-[#282836] shadow-xs">
+      <div className="p-4 rounded-2xl bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132] shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none">
         <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
           {/* Search */}
           <div className="relative flex-1 max-w-sm">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#5C5F62] dark:text-[#A0A4A8] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search your store products..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-full bg-slate-50 dark:bg-[#242432] text-xs font-medium text-slate-900 dark:text-white outline-none border border-[#E6E4F0] dark:border-[#282836] focus:border-[#111116] transition-colors placeholder:text-slate-400"
+              className="w-full pl-9 pr-4 py-2.5 rounded-full bg-white dark:bg-[#242729] text-xs font-mono text-[#191C1D] dark:text-white outline-none border border-[#E5E7EB] dark:border-[#33373B] focus:border-[#000000] dark:focus:border-white focus:ring-1 focus:ring-black/10 transition-colors placeholder:text-[#5C5F62] dark:placeholder:text-[#848484]"
             />
           </div>
 
@@ -254,10 +254,10 @@ export const SellerProducts = () => {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer ${
                   activeCategory === cat
-                    ? 'bg-[#111116] dark:bg-[#242432] text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-[#242432] text-slate-600 dark:text-[#9494A8] hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[#000000] dark:bg-white text-white dark:text-black font-semibold shadow-xs'
+                    : 'bg-[#F8F9FA] dark:bg-[#242729] border border-[#E5E7EB] dark:border-[#33373B] text-[#5C5F62] dark:text-[#A0A4A8] hover:text-[#000000] dark:hover:text-white'
                 }`}
               >
                 {cat}
@@ -269,7 +269,7 @@ export const SellerProducts = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="appearance-none px-3 py-2 rounded-xl border border-[#E6E4F0] dark:border-[#282836] bg-slate-50 dark:bg-[#242432] text-xs font-bold text-slate-700 dark:text-white outline-none cursor-pointer"
+            className="appearance-none px-3 py-2 rounded-xl border border-[#E5E7EB] dark:border-[#33373B] bg-white dark:bg-[#242729] text-xs font-mono text-[#191C1D] dark:text-white outline-none cursor-pointer focus:border-[#000000] dark:focus:border-white"
           >
             {SORT_OPTIONS.map(opt => (
               <option key={opt} value={opt}>{opt}</option>
@@ -286,51 +286,51 @@ export const SellerProducts = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.04 }}
-            className="p-6 rounded-2xl bg-white dark:bg-[#1C1C26] border border-[#E6E4F0] dark:border-[#282836] shadow-xs hover:border-[#111116]/30 dark:hover:border-[#8B5CF6]/40 transition-all group flex flex-col justify-between"
+            className="p-6 rounded-2xl bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132] shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none hover:border-[#000000] dark:hover:border-white transition-all group flex flex-col justify-between"
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-[#242432] flex items-center justify-center text-xl shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-[#F8F9FA] dark:bg-[#242729] border border-[#E5E7EB] dark:border-[#33373B] flex items-center justify-center text-xl shrink-0">
                   {product.image}
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug max-w-[180px] truncate">{product.name}</h4>
-                  <span className="text-[10px] text-slate-400 font-medium">{product.category}</span>
+                  <h4 className="text-sm font-semibold text-[#191C1D] dark:text-white leading-snug max-w-[180px] truncate">{product.name}</h4>
+                  <span className="text-[10px] text-[#5C5F62] dark:text-[#A0A4A8] font-mono">{product.category}</span>
                 </div>
               </div>
               <SentimentBadge sentiment={getSentimentLabel(product.sentimentScore)} size="sm" showIcon={false} />
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-[#282836]">
+            <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-[#E5E7EB] dark:border-[#2E3132]">
               <div>
-                <p className="text-[10px] text-slate-400 font-mono uppercase">Rating</p>
+                <p className="text-[10px] text-[#5C5F62] dark:text-[#A0A4A8] font-mono uppercase">Rating</p>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">{product.rating}</span>
-                  <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                  <span className="text-sm font-semibold text-[#000000] dark:text-white font-mono">{product.rating}</span>
+                  <Star className="w-3 h-3 text-amber-500 fill-amber-400" />
                 </div>
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 font-mono uppercase">Reviews</p>
-                <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">{product.reviews.toLocaleString()}</p>
+                <p className="text-[10px] text-[#5C5F62] dark:text-[#A0A4A8] font-mono uppercase">Reviews</p>
+                <p className="text-sm font-semibold text-[#000000] dark:text-white font-mono mt-0.5">{product.reviews.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 font-mono uppercase">Sentiment</p>
-                <p className={`text-sm font-bold mt-0.5 ${getSentimentColor(product.sentimentScore)}`}>{product.sentimentScore}%</p>
+                <p className="text-[10px] text-[#5C5F62] dark:text-[#A0A4A8] font-mono uppercase">Sentiment</p>
+                <p className="text-sm font-semibold font-mono mt-0.5 text-[#000000] dark:text-white">{product.sentimentScore}%</p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-[#282836]">
-              <span className="text-[10px] text-slate-400 font-mono">Analyzed {product.lastAnalyzed}</span>
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#E5E7EB] dark:border-[#2E3132]">
+              <span className="text-[10px] text-[#5C5F62] dark:text-[#A0A4A8] font-mono">Analyzed {product.lastAnalyzed}</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => navigate(`/dashboard/products/${product.id}`)}
-                  className="px-3 py-1.5 rounded-xl text-[10px] font-bold text-white bg-[#111116] hover:bg-black dark:bg-[#2563EB] transition-all cursor-pointer shadow-xs"
+                  className="px-3 py-1.5 rounded-lg bg-[#000000] dark:bg-white text-white dark:text-black text-[10px] font-mono hover:bg-[#1B1B1B] dark:hover:bg-slate-100 transition-colors shadow-xs cursor-pointer"
                 >
                   Analytics
                 </button>
                 <button
                   onClick={() => navigate('/dashboard/reviews')}
-                  className="px-3 py-1.5 rounded-xl text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-[#242432] hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg border border-[#E5E7EB] dark:border-[#33373B] text-[#191C1D] dark:text-white text-[10px] font-mono hover:bg-[#F8F9FA] dark:hover:bg-[#242729] transition-colors cursor-pointer"
                 >
                   Reviews
                 </button>
@@ -341,12 +341,12 @@ export const SellerProducts = () => {
       </div>
 
       {filtered.length === 0 && (
-        <div className="py-20 text-center rounded-2xl bg-white dark:bg-[#1C1C26] border border-[#E6E4F0] dark:border-[#282836]">
-          <Package className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-          <p className="text-sm font-medium text-slate-400">No products found in your store catalog.</p>
+        <div className="py-20 text-center rounded-2xl bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132]">
+          <Package className="w-12 h-12 mx-auto text-[#5C5F62] dark:text-[#A0A4A8] mb-4" />
+          <p className="text-sm font-medium text-[#5C5F62] dark:text-[#A0A4A8]">No products found in your store catalog.</p>
           <button
             onClick={() => setShowAddModal(true)}
-            className="mt-4 px-4 py-2 rounded-xl bg-[#111116] dark:bg-[#2563EB] text-white text-xs font-bold cursor-pointer"
+            className="mt-4 px-4 py-2 rounded-xl bg-[#000000] dark:bg-white text-white dark:text-black text-xs font-mono font-semibold cursor-pointer"
           >
             + Add First Product
           </button>
@@ -356,83 +356,83 @@ export const SellerProducts = () => {
       {/* Add New Product Modal */}
       <AnimatePresence>
         {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs font-sans">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg p-6 rounded-2xl bg-white dark:bg-[#1C1C26] border border-[#E6E4F0] dark:border-[#282836] shadow-2xl space-y-4"
+              className="w-full max-w-lg p-6 rounded-2xl bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132] shadow-2xl space-y-4"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#282836]">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB] dark:border-[#2E3132]">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#111116] dark:bg-[#2563EB] text-white flex items-center justify-center font-bold">
+                  <div className="w-8 h-8 rounded-full bg-[#000000] dark:bg-white text-white dark:text-black flex items-center justify-center font-bold">
                     <Plus className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Add New Store Product</h3>
-                    <p className="text-[11px] text-slate-500 dark:text-[#9494A8]">Paste Flipkart link or enter manual product info</p>
+                    <h3 className="text-base font-bold text-[#191C1D] dark:text-white">Add New Store Product</h3>
+                    <p className="text-[11px] text-[#5C5F62] dark:text-[#A0A4A8] font-mono">Paste Flipkart link or enter manual product info</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowAddModal(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
+                  className="p-1 rounded-lg text-[#5C5F62] hover:text-[#191C1D] dark:text-[#A0A4A8] dark:hover:text-white transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleAddProduct} className="space-y-4">
+              <form onSubmit={handleAddProduct} className="space-y-4 font-sans">
                 
                 {/* 1. Flipkart Link Auto-Extraction Input */}
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#242432] border border-[#E6E4F0] dark:border-[#282836] space-y-1.5">
+                <div className="p-3.5 rounded-xl bg-[#F8F9FA] dark:bg-[#242729] border border-[#E5E7EB] dark:border-[#33373B] space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 font-mono flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-[#2563EB]" /> Paste Flipkart Product Link
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#191C1D] dark:text-white font-mono flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-[#000000] dark:text-white" /> Paste Flipkart Product Link
                     </label>
                     {isFetchingUrl ? (
-                      <span className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-700 text-[9px] font-bold font-mono flex items-center gap-1">
+                      <span className="px-2 py-0.5 rounded-md bg-[#EDEEEF] dark:bg-[#33373B] text-[#191C1D] dark:text-white text-[9px] font-bold font-mono flex items-center gap-1">
                         <RefreshCw className="w-3 h-3 animate-spin" /> Fetching Live Data...
                       </span>
                     ) : isUrlAutoExtracted ? (
-                      <span className="px-2 py-0.5 rounded-md bg-[#DCFCE7] text-[#15803D] dark:bg-emerald-950/40 dark:text-[#22C55E] text-[9px] font-bold font-mono flex items-center gap-1">
+                      <span className="px-2 py-0.5 rounded-md bg-black dark:bg-white text-white dark:text-black text-[9px] font-bold font-mono flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" /> Exact Data Extracted!
                       </span>
                     ) : null}
                   </div>
                   
                   <div className="relative">
-                    <LinkIcon className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <LinkIcon className="w-3.5 h-3.5 text-[#5C5F62] dark:text-[#A0A4A8] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="url"
                       value={newFlipkartUrl}
                       onChange={(e) => handleUrlChange(e.target.value)}
                       placeholder="e.g. https://www.flipkart.com/samsung-galaxy-s26-5g-black-256-gb/p/itm0ca5d0430e1c1"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white dark:bg-[#1C1C26] border border-[#E6E4F0] dark:border-[#282836] text-xs text-slate-900 dark:text-white outline-none focus:border-[#111116]"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#33373B] text-xs text-[#191C1D] dark:text-white outline-none focus:border-[#000000] dark:focus:border-white font-mono placeholder:text-[#5C5F62]"
                     />
                   </div>
-                  <p className="text-[9px] text-slate-400 font-mono">Pasting a Flipkart link fetches the exact rating (e.g. 4.7★), review count (562), category & title.</p>
+                  <p className="text-[9px] text-[#5C5F62] dark:text-[#A0A4A8] font-mono">Pasting a Flipkart link fetches the exact rating, review count, category & title.</p>
                 </div>
 
                 {/* 2. Product Name */}
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1 font-mono">Product Name</label>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-[#5C5F62] dark:text-[#A0A4A8] block mb-1 font-mono">Product Name</label>
                   <input
                     type="text"
                     required
                     value={newProductName}
                     onChange={(e) => setNewProductName(e.target.value)}
                     placeholder="e.g. Samsung Galaxy S26 5G (Black, 512 GB)"
-                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-[#242432] border border-[#E6E4F0] dark:border-[#282836] text-xs font-semibold text-slate-900 dark:text-white outline-none focus:border-[#111116]"
+                    className="w-full p-3 rounded-xl bg-[#F8F9FA] dark:bg-[#242729] border border-[#E5E7EB] dark:border-[#33373B] text-xs font-semibold text-[#191C1D] dark:text-white outline-none focus:border-[#000000] dark:focus:border-white"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1 font-mono">Category</label>
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#5C5F62] dark:text-[#A0A4A8] block mb-1 font-mono">Category</label>
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
-                      className="w-full p-3 rounded-xl bg-slate-50 dark:bg-[#242432] border border-[#E6E4F0] dark:border-[#282836] text-xs font-semibold text-slate-900 dark:text-white outline-none cursor-pointer"
+                      className="w-full p-3 rounded-xl bg-[#F8F9FA] dark:bg-[#242729] border border-[#E5E7EB] dark:border-[#33373B] text-xs font-semibold text-[#191C1D] dark:text-white outline-none cursor-pointer focus:border-[#000000] dark:focus:border-white"
                     >
                       <option value="Smartphones">Smartphones</option>
                       <option value="Laptops">Laptops</option>
@@ -444,15 +444,15 @@ export const SellerProducts = () => {
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1 font-mono">Product Icon</label>
-                    <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 rounded-xl bg-slate-50 dark:bg-[#242432]">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#5C5F62] dark:text-[#A0A4A8] block mb-1 font-mono">Product Icon</label>
+                    <div className="flex items-center gap-1.5 overflow-x-auto p-1.5 rounded-xl bg-[#F8F9FA] dark:bg-[#242729] border border-[#E5E7EB] dark:border-[#33373B]">
                       {EMOJI_ICONS.map((emoji) => (
                         <button
                           key={emoji}
                           type="button"
                           onClick={() => setSelectedEmoji(emoji)}
                           className={`p-1.5 rounded-lg text-sm transition-transform cursor-pointer ${
-                            selectedEmoji === emoji ? 'bg-white dark:bg-[#1C1C26] shadow-xs scale-110' : 'opacity-60'
+                            selectedEmoji === emoji ? 'bg-white dark:bg-[#191C1D] shadow-xs scale-110' : 'opacity-60'
                           }`}
                         >
                           {emoji}
@@ -464,7 +464,7 @@ export const SellerProducts = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1 font-mono">Initial Rating (Stars)</label>
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#5C5F62] dark:text-[#A0A4A8] block mb-1 font-mono">Initial Rating (Stars)</label>
                     <input
                       type="number"
                       step="0.1"
@@ -472,17 +472,17 @@ export const SellerProducts = () => {
                       max="5"
                       value={newRating}
                       onChange={(e) => setNewRating(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#242432] border border-[#E6E4F0] dark:border-[#282836] text-xs font-bold text-slate-900 dark:text-white outline-none"
+                      className="w-full p-2.5 rounded-xl bg-[#F8F9FA] dark:bg-[#242729] border border-[#E5E7EB] dark:border-[#33373B] text-xs font-bold text-[#191C1D] dark:text-white outline-none font-mono"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1 font-mono">Review Count</label>
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#5C5F62] dark:text-[#A0A4A8] block mb-1 font-mono">Review Count</label>
                     <input
                       type="number"
                       value={newReviews}
                       onChange={(e) => setNewReviews(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#242432] border border-[#E6E4F0] dark:border-[#282836] text-xs font-bold text-slate-900 dark:text-white outline-none"
+                      className="w-full p-2.5 rounded-xl bg-[#F8F9FA] dark:bg-[#242729] border border-[#E5E7EB] dark:border-[#33373B] text-xs font-bold text-[#191C1D] dark:text-white outline-none font-mono"
                     />
                   </div>
                 </div>
@@ -491,13 +491,13 @@ export const SellerProducts = () => {
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#242432] text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl border border-[#E5E7EB] dark:border-[#33373B] bg-white dark:bg-[#242729] text-[#191C1D] dark:text-white font-mono font-medium text-xs cursor-pointer hover:bg-[#F8F9FA] dark:hover:bg-[#2E3132] transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-[#111116] hover:bg-black dark:bg-[#2563EB] text-white font-extrabold text-xs shadow-md cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl bg-[#000000] dark:bg-white text-white dark:text-black font-mono font-semibold text-xs shadow-md cursor-pointer hover:bg-[#1B1B1B] dark:hover:bg-slate-100 transition-colors"
                   >
                     Add Product
                   </button>

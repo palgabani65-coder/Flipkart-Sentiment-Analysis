@@ -236,8 +236,34 @@ export const Landing = memo(() => {
   // Navbar interaction states
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const [activeHoverNav, setActiveHoverNav] = useState(null);
+  const [activeSection, setActiveSection] = useState('');
   const [showNavbar, setShowNavbar] = useState(true);
+
+  // Track active section on scroll for persistent nav underline
+  useEffect(() => {
+    const handleScrollActive = () => {
+      const sectionIds = ['features', 'how-it-works', 'technology', 'why-choose-us', 'demo'];
+      const scrollPos = window.scrollY + 180;
+      let current = '';
+
+      for (const id of sectionIds) {
+        const el = document.getElementById(id);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPos >= top && scrollPos < top + height) {
+            current = id;
+            break;
+          }
+        }
+      }
+      setActiveSection(current);
+    };
+
+    window.addEventListener('scroll', handleScrollActive, { passive: true });
+    handleScrollActive();
+    return () => window.removeEventListener('scroll', handleScrollActive);
+  }, []);
 
   const scrollToHero = (e) => {
     e?.preventDefault();
@@ -325,32 +351,30 @@ export const Landing = memo(() => {
               </div>
             </Link>
 
-            {/* Desktop Nav Links with Hover Pill Indicator */}
-            <nav className="hidden lg:flex items-center gap-1 bg-neutral-900/60 p-1.5 rounded-full border border-neutral-800/60 backdrop-blur-md">
+            {/* Desktop Nav Links with Sliding Underline & Active Section Indicator */}
+            <nav className="hidden lg:flex items-center gap-1 bg-[#131719]/80 px-2.5 py-1.5 rounded-full border border-[#272a2c] backdrop-blur-md">
               {[
-                { name: 'Features', href: '#features' },
-                { name: 'How It Works', href: '#how-it-works' },
-                { name: 'Technology', href: '#technology' },
-                { name: 'Why Choose Us', href: '#why-choose-us' },
-                { name: 'Live Demo', href: '#demo' }
-              ].map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  onMouseEnter={() => setActiveHoverNav(item.name)}
-                  onMouseLeave={() => setActiveHoverNav(null)}
-                  className="px-4 py-1.5 rounded-full text-xs font-semibold text-neutral-300 hover:text-white relative transition-all duration-200 hover:scale-105 active:scale-95"
-                >
-                  {activeHoverNav === item.name && (
-                    <m.span
-                      layoutId="navHoverPill"
-                      className="absolute inset-0 rounded-full bg-white/10 border border-white/20 shadow-sm"
-                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  <span className="relative z-10">{item.name}</span>
-                </a>
-              ))}
+                { name: 'Features', href: '#features', id: 'features' },
+                { name: 'How It Works', href: '#how-it-works', id: 'how-it-works' },
+                { name: 'Technology', href: '#technology', id: 'technology' },
+                { name: 'Why Choose Us', href: '#why-choose-us', id: 'why-choose-us' },
+                { name: 'Live Demo', href: '#demo', id: 'demo' }
+              ].map((item) => {
+                const isActive = activeSection === item.id;
+                return (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setActiveSection(item.id)}
+                    className={`px-3 py-1 text-xs font-semibold tracking-tight transition-colors duration-200 group ${isActive ? 'text-white' : 'text-[#A0A4A8] hover:text-white'
+                      }`}
+                  >
+                    <span className={`nav-link-sliding ${isActive ? 'active' : ''}`}>
+                      {item.name}
+                    </span>
+                  </a>
+                );
+              })}
             </nav>
 
             {/* Action Buttons */}
@@ -358,25 +382,25 @@ export const Landing = memo(() => {
               {user ? (
                 <Link
                   to="/dashboard"
-                  className="px-5 py-2.5 text-xs font-bold rounded-full bg-white text-black hover:bg-neutral-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-105 active:scale-95 flex items-center gap-2"
+                  className="px-5 py-2.5 text-xs font-bold rounded-full bg-white text-black hover:bg-[#0b0f10] hover:text-[#e0e3e5] border border-white hover:border-[#bec6e0]/60 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(190,198,224,0.4)] hover:scale-[1.025] active:scale-[0.98] transition-all duration-200 ease-out flex items-center gap-2 group cursor-pointer"
                 >
                   <span>Dashboard</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5 text-black group-hover:text-[#7bd0ff] transition-transform duration-200 ease-out group-hover:translate-x-1" />
                 </Link>
               ) : (
                 <div className="flex items-center gap-2">
                   <Link
                     to="/login"
-                    className="px-4 py-2 text-xs font-semibold text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-full border border-transparent hover:border-neutral-800 transition-all"
+                    className="px-4 py-2 text-xs font-semibold text-[#A0A4A8] hover:text-white hover:bg-neutral-900 rounded-full border border-transparent hover:border-[#272a2c] transition-all"
                   >
                     Sign In
                   </Link>
                   <a
                     href="#get-started"
-                    className="px-5 py-2.5 text-xs font-extrabold rounded-full bg-white text-black hover:bg-neutral-200 shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
+                    className="px-5 py-2.5 text-xs font-extrabold rounded-full bg-white text-black hover:bg-[#0b0f10] hover:text-[#e0e3e5] border border-white hover:border-[#bec6e0]/60 shadow-[0_0_18px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(190,198,224,0.4)] hover:scale-[1.025] active:scale-[0.98] transition-all duration-200 ease-out flex items-center gap-1.5 cursor-pointer group"
                   >
                     <span>Get Started</span>
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Sparkles className="w-3.5 h-3.5 text-black group-hover:text-[#7bd0ff] transition-all duration-200 group-hover:rotate-12" />
                   </a>
                 </div>
               )}
@@ -451,121 +475,145 @@ export const Landing = memo(() => {
               <Suspense fallback={null}>
                 <Orb
                   hue={0}
-                  hoverIntensity={1.5}
+                  hoverIntensity={1.2}
                   rotateOnHover
                   forceHoverState={false}
                   backgroundColor="#000000"
+                  color1="#7BD0FF"
+                  color2="#BEC6E0"
+                  color3="#091528"
+                  ambientRotation={true}
                 />
               </Suspense>
             </InViewRender>
           </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center flex flex-col items-center">
 
+            {/* Staggered Element 1: Badge in monospace-caps sign-in style with live pulse dot */}
             <m.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neutral-950/80 backdrop-blur-md border border-zinc-800 text-xs font-semibold text-[#A1A1AA] shadow-sm"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0b0f10] border border-[#272a2c] text-[11px] font-mono uppercase tracking-[0.16em] text-[#bec6e0] shadow-sm mb-5"
             >
-              <span className="text-[#22D3EE]">✦</span>
-              <span className="text-[#A1A1AA]">AI-Powered Flipkart Review Intelligence</span>
+              <span className="live-status-dot !w-2 !h-2" />
+              <span>AI-Powered Flipkart Review Intelligence</span>
             </m.div>
 
-            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-[48px] font-extrabold tracking-tight text-[#F5F5F5] max-w-3xl sm:max-w-4xl mx-auto leading-[1.2]">
+            {/* Staggered Element 2: Headline with gradient matching the background Orb */}
+            <m.h1
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              className="text-2xl sm:text-4xl md:text-5xl lg:text-[48px] font-extrabold tracking-tight text-[#F5F5F5] max-w-3xl sm:max-w-4xl mx-auto leading-[1.22]"
+            >
               Transform Flipkart Reviews into{' '}
-              <span className="bg-gradient-to-r from-cyan-200 via-white to-indigo-200 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(255,255,255,0.12)]">
+              <span className="inline-block bg-gradient-to-r from-[#A8E2FF] via-[#DCF2FF] to-[#FFFFFF] bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(168,226,255,0.45)]">
                 Actionable Intelligence
               </span>
-            </h1>
+            </m.h1>
 
+            {/* Staggered Element 3: Rotating Tagline cycling 3 dashboard-aligned phrases with breathing room */}
             <m.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="text-base sm:text-xl font-semibold text-neutral-300 max-w-3xl mx-auto min-h-[2.5rem] flex items-center justify-center"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.20, ease: [0.16, 1, 0.3, 1] }}
+              className="text-base sm:text-xl font-semibold max-w-3xl mx-auto min-h-[2.75rem] flex items-center justify-center mt-5 mb-7 sm:mt-6 sm:mb-9"
             >
               <TypewriterEffect
                 staticPrefix=""
                 words={[
                   'Deep Aspect Analysis',
-                  'Real-Time Sentiment Detection',
-                  'Automated Rating Validation',
-                  'Instant Customer Insights'
+                  'Real-Time Sentiment',
+                  'Actionable Insights'
                 ]}
                 wordColors={[
-                  '#67E8F9',
-                  '#93C5FD',
-                  '#A5B4FC',
-                  '#C4B5FD'
+                  '#FFFFFF',
+                  '#FFFFFF',
+                  '#FFFFFF'
                 ]}
-                textClassName="font-extrabold tracking-tight"
-                cursorClassName="bg-[#22D3EE] shadow-[0_0_10px_rgba(34,211,238,0.6)]"
+                textClassName="font-extrabold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.18)]"
+                cursorClassName="bg-[#7BD0FF] shadow-[0_0_12px_rgba(123,208,255,0.85)]"
                 typingSpeed={65}
                 deletingSpeed={30}
-                delayBetweenWords={2000}
+                delayBetweenWords={2200}
               />
             </m.div>
 
+            {/* Staggered Element 4: Tightened Body Copy */}
             <m.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.25 }}
-              className="text-sm sm:text-base text-[#A1A1AA] max-w-2xl mx-auto leading-relaxed font-normal"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className="text-sm sm:text-base text-[#A0A4A8] max-w-2xl mx-auto leading-relaxed font-normal mb-8"
             >
-              Turn thousands of Flipkart reviews into clear insights on customer sentiment, product strengths, recurring issues, and buying signals.
+              Turn thousands of Flipkart reviews into clear insights on sentiment, product strengths, and buying signals.
             </m.p>
 
+            {/* Staggered Element 5: Responsive CTA Buttons with Inverted & Tinted Hover States */}
             <m.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="flex flex-wrap justify-center items-center gap-4 pt-2"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.36, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-wrap justify-center items-center gap-4 pt-1 mb-6"
             >
+              {/* Primary CTA: Dark inversion hover style matching Get Started Now */}
               <a
                 href="#get-started"
-                className="px-8 py-3.5 rounded-full bg-white text-[#111111] font-extrabold text-xs sm:text-sm shadow-xl hover:bg-neutral-200 hover:scale-105 transition-all flex items-center gap-2"
+                className="px-8 py-3.5 rounded-full bg-white text-black hover:bg-[#0b0f10] hover:text-[#e0e3e5] border border-white hover:border-[#bec6e0]/60 font-extrabold text-xs sm:text-sm shadow-[0_4px_20px_rgba(255,255,255,0.18)] hover:shadow-[0_0_30px_rgba(190,198,224,0.4)] hover:scale-[1.025] active:scale-[0.98] transition-all duration-200 ease-out flex items-center gap-2 group cursor-pointer"
               >
-                <span className="text-[#22D3EE]">✦</span>
+                <Sparkles className="w-3.5 h-3.5 text-black group-hover:text-[#7bd0ff] transition-all duration-200 group-hover:rotate-12" />
                 <span>Analyze Reviews</span>
               </a>
 
+              {/* Secondary CTA: Fill with low-opacity white/accent background with sliding arrow */}
               <a
                 href="#demo"
-                className="px-7 py-3.5 rounded-full bg-neutral-950/80 backdrop-blur-md text-white font-semibold text-xs sm:text-sm border border-zinc-800 shadow-sm hover:bg-neutral-900 transition-all flex items-center gap-1.5"
+                className="px-7 py-3.5 rounded-full bg-transparent hover:bg-white/[0.08] backdrop-blur-md text-[#e0e3e5] hover:text-white font-semibold text-xs sm:text-sm border border-white/20 hover:border-[#7bd0ff]/60 shadow-sm hover:shadow-[0_0_20px_rgba(123,208,255,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 ease-out flex items-center gap-2 group cursor-pointer"
               >
                 <span>Explore Live Demo</span>
-                <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#909097] transition-all duration-200 ease-out group-hover:translate-x-1.5 group-hover:text-[#7bd0ff]" />
               </a>
             </m.div>
 
-            {/* Sleek Subdued Quick Metrics Bar */}
+            {/* Staggered Element 6: Separated Stat Cards with Cream Accent Hierarchy and Shared Hover Lift */}
             <m.div
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.35 }}
-              className="pt-8 grid grid-cols-2 md:grid-cols-4 gap-3.5 max-w-3xl mx-auto"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.44, ease: [0.16, 1, 0.3, 1] }}
+              className="pt-6 sm:pt-8 w-full max-w-3xl mx-auto"
             >
-              <div className="p-3.5 rounded-xl bg-[#111111]/65 backdrop-blur-md border border-white/10 shadow-sm transition-all duration-300 hover:border-white/20">
-                <span className="block text-xl sm:text-2xl font-extrabold text-white font-mono">
-                  <CountUp from={0} to={57} separator="," direction="up" duration={1} className="count-up-text" delay={0} /> K+</span>
-                <span className="text-[11px] text-zinc-400 font-medium">Clean Reviews</span>
-              </div>
-              <div className="p-4 rounded-xl bg-[#111111]/65 backdrop-blur-md border border-white/10 shadow-sm transition-all duration-300 hover:border-white/20">
-                <span className="block text-xl sm:text-2xl font-extrabold text-white font-mono">8</span>
-                <span className="text-[11px] text-zinc-400 font-medium">Aspect Categories</span>
-              </div>
-              <div className="p-4 rounded-xl bg-[#111111]/65 backdrop-blur-md border border-white/10 shadow-sm transition-all duration-300 hover:border-white/20">
-                <span className="block text-xl sm:text-2xl font-extrabold text-white font-mono">NLP</span>
-                <span className="text-[11px] text-zinc-400 font-medium">Sentiment Analysis</span>
-              </div>
-              <div className="p-4 rounded-xl bg-[#111111]/65 backdrop-blur-md border border-white/10 shadow-sm transition-all duration-300 hover:border-white/20">
-                <span className="block text-xl sm:text-2xl font-extrabold text-white font-mono">Real-Time</span>
-                <span className="text-[11px] text-zinc-400 font-medium">Insights</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 p-2 sm:p-2.5 rounded-2xl bg-neutral-950/60 backdrop-blur-xl border-t border-white/10 border-x border-b border-white/5 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+                {/* Card 1: Tinted off-white/cream emphasis (echoing dashboard Avg Rating KPI card) */}
+                <div className="relative overflow-hidden p-3.5 sm:p-4 rounded-xl bg-gradient-to-br from-[#1c1a17]/95 via-[#221f1a]/85 to-[#2c2419]/70 backdrop-blur-xl border border-[#FEF3C7]/30 shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:border-[#FEF3C7]/60 hover:shadow-[0_12px_30px_rgba(0,0,0,0.6),0_0_24px_rgba(254,243,199,0.18)] cursor-pointer group">
+                  <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#FEF3C7]/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
+                  <span className="block text-xl sm:text-2xl font-extrabold text-[#FEF3C7] font-mono drop-shadow-[0_0_12px_rgba(254,243,199,0.2)]">
+                    <CountUp from={0} to={57} separator="," direction="up" duration={1} className="count-up-text" delay={0} />K+
+                  </span>
+                  <span className="text-[11px] font-mono text-[#D4D0C5] uppercase tracking-wider font-medium group-hover:text-[#FEF3C7] transition-colors">Clean Reviews</span>
+                </div>
+
+                {/* Card 2: Shared hover-lift & border glow */}
+                <div className="relative overflow-hidden p-3.5 sm:p-4 rounded-xl bg-[#131719]/90 hover:bg-[#1a1f23] backdrop-blur-xl border border-[#272a2c] hover:border-[#7bd0ff]/50 shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_12px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(123,208,255,0.15)] cursor-pointer group">
+                  <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
+                  <span className="block text-xl sm:text-2xl font-extrabold text-[#e0e3e5] font-mono group-hover:text-white transition-colors">8</span>
+                  <span className="text-[11px] font-mono text-[#909097] uppercase tracking-wider font-medium group-hover:text-[#bec6e0] transition-colors">Aspect Categories</span>
+                </div>
+
+                {/* Card 3: Shared hover-lift & border glow */}
+                <div className="relative overflow-hidden p-3.5 sm:p-4 rounded-xl bg-[#131719]/90 hover:bg-[#1a1f23] backdrop-blur-xl border border-[#272a2c] hover:border-[#7bd0ff]/50 shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_12px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(123,208,255,0.15)] cursor-pointer group">
+                  <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
+                  <span className="block text-xl sm:text-2xl font-extrabold text-[#e0e3e5] font-mono group-hover:text-white transition-colors">NLP</span>
+                  <span className="text-[11px] font-mono text-[#909097] uppercase tracking-wider font-medium group-hover:text-[#bec6e0] transition-colors">Sentiment Analysis</span>
+                </div>
+
+                {/* Card 4: Shared hover-lift & border glow */}
+                <div className="relative overflow-hidden p-3.5 sm:p-4 rounded-xl bg-[#131719]/90 hover:bg-[#1a1f23] backdrop-blur-xl border border-[#272a2c] hover:border-[#7bd0ff]/50 shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_12px_30px_rgba(0,0,0,0.6),0_0_20px_rgba(123,208,255,0.15)] cursor-pointer group">
+                  <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
+                  <span className="block text-xl sm:text-2xl font-extrabold text-[#e0e3e5] font-mono group-hover:text-white transition-colors">Real-Time</span>
+                  <span className="text-[11px] font-mono text-[#909097] uppercase tracking-wider font-medium group-hover:text-[#bec6e0] transition-colors">Insights</span>
+                </div>
               </div>
             </m.div>
 
@@ -574,12 +622,19 @@ export const Landing = memo(() => {
 
         {/* KEY FEATURES SECTION */}
         <section id="features" className="py-24 bg-black border-y border-neutral-800/80 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8">
+          <m.div
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8"
+          >
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
               <div className="space-y-3 max-w-2xl text-left">
-                <span className="text-xs font-semibold text-neutral-400 uppercase tracking-widest px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 inline-block">
-                  Core Platform Capabilities
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0b0f10] border border-[#272a2c] text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.16em] text-[#bec6e0] shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#7bd0ff] animate-pulse" />
+                  <span>Core Platform Capabilities</span>
                 </span>
                 <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
                   Powerful NLP Intelligence
@@ -603,7 +658,7 @@ export const Landing = memo(() => {
               </Suspense>
             </div>
 
-          </div>
+          </m.div>
         </section>
 
         {/* HOW IT WORKS SECTION */}
@@ -615,8 +670,8 @@ export const Landing = memo(() => {
               <InViewRender className="w-full h-full">
                 <Suspense fallback={null}>
                   <MagicRings
-                    color="#A855F7"
-                    colorTwo="#6366F1"
+                    color="#7BD0FF"
+                    colorTwo="#BEC6E0"
                     ringCount={6}
                     speed={1}
                     attenuation={12}
@@ -624,7 +679,7 @@ export const Landing = memo(() => {
                     baseRadius={0.35}
                     radiusStep={0.1}
                     scaleRate={0.1}
-                    opacity={1}
+                    opacity={0.8}
                     blur={0}
                     noiseAmount={0.1}
                     rotation={0}
@@ -642,11 +697,18 @@ export const Landing = memo(() => {
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <m.div
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
+          >
 
             <div className="text-center max-w-2xl mx-auto space-y-3 mb-16">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-widest">
-                Simple 4-Step Pipeline
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0b0f10] border border-[#272a2c] text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.16em] text-[#bec6e0] shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7bd0ff] animate-pulse" />
+                <span>Simple 4-Step Pipeline</span>
               </span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
                 How It Works
@@ -659,8 +721,8 @@ export const Landing = memo(() => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
 
               {/* Step 1 */}
-              <div className="p-6 rounded-3xl bg-neutral-900/90 backdrop-blur-md border border-neutral-800 shadow-sm space-y-3 relative">
-                <div className="w-10 h-10 rounded-2xl bg-neutral-800 text-white border border-neutral-700 font-extrabold flex items-center justify-center text-sm shadow-md">
+              <div className="p-6 rounded-3xl bg-neutral-900/90 backdrop-blur-md border border-neutral-800 shadow-sm space-y-3 relative hover:border-[#7bd0ff]/40 transition-all duration-200">
+                <div className="w-10 h-10 rounded-xl bg-[#00a6e0]/15 border border-[#7bd0ff]/30 text-[#7bd0ff] font-mono font-bold flex items-center justify-center text-sm shadow-md">
                   1
                 </div>
                 <h3 className="text-base font-bold text-white">Enter or Select Review</h3>
@@ -670,8 +732,8 @@ export const Landing = memo(() => {
               </div>
 
               {/* Step 2 */}
-              <div className="p-6 rounded-3xl bg-neutral-900/90 backdrop-blur-md border border-neutral-800 shadow-sm space-y-3 relative">
-                <div className="w-10 h-10 rounded-2xl bg-neutral-800 text-white border border-neutral-700 font-extrabold flex items-center justify-center text-sm shadow-md">
+              <div className="p-6 rounded-3xl bg-neutral-900/90 backdrop-blur-md border border-neutral-800 shadow-sm space-y-3 relative hover:border-[#7bd0ff]/40 transition-all duration-200">
+                <div className="w-10 h-10 rounded-xl bg-[#00a6e0]/15 border border-[#7bd0ff]/30 text-[#7bd0ff] font-mono font-bold flex items-center justify-center text-sm shadow-md">
                   2
                 </div>
                 <h3 className="text-base font-bold text-white">ML Model Text Analysis</h3>
@@ -681,8 +743,8 @@ export const Landing = memo(() => {
               </div>
 
               {/* Step 3 */}
-              <div className="p-6 rounded-3xl bg-neutral-900/90 backdrop-blur-md border border-neutral-800 shadow-sm space-y-3 relative">
-                <div className="w-10 h-10 rounded-2xl bg-neutral-800 text-white border border-neutral-700 font-extrabold flex items-center justify-center text-sm shadow-md">
+              <div className="p-6 rounded-3xl bg-neutral-900/90 backdrop-blur-md border border-neutral-800 shadow-sm space-y-3 relative hover:border-[#7bd0ff]/40 transition-all duration-200">
+                <div className="w-10 h-10 rounded-xl bg-[#00a6e0]/15 border border-[#7bd0ff]/30 text-[#7bd0ff] font-mono font-bold flex items-center justify-center text-sm shadow-md">
                   3
                 </div>
                 <h3 className="text-base font-bold text-white">Sentiment Prediction</h3>
@@ -692,8 +754,8 @@ export const Landing = memo(() => {
               </div>
 
               {/* Step 4 */}
-              <div className="p-6 rounded-3xl bg-neutral-900/90 backdrop-blur-md border border-neutral-800 shadow-sm space-y-3 relative">
-                <div className="w-10 h-10 rounded-2xl bg-neutral-800 text-white border border-neutral-700 font-extrabold flex items-center justify-center text-sm shadow-md">
+              <div className="p-6 rounded-3xl bg-neutral-900/90 backdrop-blur-md border border-neutral-800 shadow-sm space-y-3 relative hover:border-[#7bd0ff]/40 transition-all duration-200">
+                <div className="w-10 h-10 rounded-xl bg-[#00a6e0]/15 border border-[#7bd0ff]/30 text-[#7bd0ff] font-mono font-bold flex items-center justify-center text-sm shadow-md">
                   4
                 </div>
                 <h3 className="text-base font-bold text-white">Detailed Insights & Analytics</h3>
@@ -704,16 +766,23 @@ export const Landing = memo(() => {
 
             </div>
 
-          </div>
+          </m.div>
         </section>
 
         {/* TECHNOLOGY SECTION */}
         <section id="technology" className="py-20 bg-black border-t border-neutral-800">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <m.div
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8"
+          >
 
             <div className="text-center max-w-2xl mx-auto space-y-3">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-widest">
-                Core Tech Stack & Architecture
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0b0f10] border border-[#272a2c] text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.16em] text-[#bec6e0] shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7bd0ff] animate-pulse" />
+                <span>Core Tech Stack & Architecture</span>
               </span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
                 Technology Stack
@@ -773,16 +842,23 @@ export const Landing = memo(() => {
               )}
             </div>
 
-          </div>
+          </m.div>
         </section>
 
         {/* WHY CHOOSE US SECTION */}
         <section id="why-choose-us" className="py-20 bg-black border-t border-neutral-800">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <m.div
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12"
+          >
 
             <div className="text-center max-w-2xl mx-auto space-y-3">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-widest">
-                Built for Buyers, Researchers & Sellers
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0b0f10] border border-[#272a2c] text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.16em] text-[#bec6e0] shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7bd0ff] animate-pulse" />
+                <span>Built for Buyers, Researchers & Sellers</span>
               </span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
                 Why Choose Our Platform?
@@ -805,23 +881,30 @@ export const Landing = memo(() => {
                     clickEffect
                     spotlightRadius={400}
                     particleCount={12}
-                    glowColor="132, 0, 255"
+                    glowColor="123, 208, 255"
                     disableAnimations={false}
                   />
                 </Suspense>
               </InViewRender>
             </div>
 
-          </div>
+          </m.div>
         </section>
 
         {/* LIVE SANDBOX DEMO SECTION */}
         <section id="demo" className="py-24 bg-black border-t border-neutral-800/80 relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <m.div
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
+          >
 
             <div className="text-center max-w-2xl mx-auto space-y-3 mb-16">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-widest px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 inline-block">
-                Interactive Inference Studio
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0b0f10] border border-[#272a2c] text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.16em] text-[#bec6e0] shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7bd0ff] animate-pulse" />
+                <span>Interactive Inference Studio</span>
               </span>
               <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
                 Test Review Sentiment Live
@@ -962,15 +1045,22 @@ export const Landing = memo(() => {
 
             </div>
 
-          </div>
+          </m.div>
         </section>
 
         {/* FAQ SECTION */}
         <section id="faq" className="py-20 bg-black border-t border-neutral-800">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <m.div
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12"
+          >
             <div className="text-center space-y-3">
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-widest">
-                Got Questions?
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0b0f10] border border-[#272a2c] text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.16em] text-[#bec6e0] shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7bd0ff] animate-pulse" />
+                <span>Got Questions?</span>
               </span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
                 Frequently Asked Questions
@@ -993,25 +1083,25 @@ export const Landing = memo(() => {
                 </Suspense>
               </InViewRender>
             </div>
-          </div>
+          </m.div>
         </section>
 
         {/* FINAL CALL TO ACTION */}
         <section id="get-started" className="py-20 bg-black border-t border-neutral-800 text-white text-center relative overflow-hidden">
 
-          {/* Interactive CursorGrid Canvas Background */}
+          {/* Interactive CursorGrid Canvas Background in brand cyan */}
           <div style={{ width: '100%', height: '100%', position: 'absolute' }} className="top-0 left-0 pointer-events-auto z-0 overflow-hidden opacity-80">
             <InViewRender className="w-full h-full">
               <Suspense fallback={null}>
                 <CursorGrid
                   cellSize={70}
-                  color="#D946EF"
+                  color="#7BD0FF"
                   radius={140}
                   falloff="smooth"
                   holdTime={400}
                   fadeDuration={800}
                   lineWidth={1.2}
-                  maxOpacity={1}
+                  maxOpacity={0.9}
                   fillOpacity={0}
                   gridOpacity={0}
                   cellRadius={0}
@@ -1032,10 +1122,10 @@ export const Landing = memo(() => {
             <div className="pt-2 pointer-events-auto">
               <Link
                 to={user ? "/dashboard" : "/register"}
-                className="inline-flex items-center gap-2.5 px-9 py-4 rounded-full bg-white text-black font-extrabold text-sm shadow-2xl hover:bg-neutral-200 hover:scale-105 transition-all"
+                className="inline-flex items-center gap-2.5 px-9 py-4 rounded-full bg-white text-black hover:bg-[#0b0f10] hover:text-[#e0e3e5] border border-white hover:border-[#bec6e0]/60 font-extrabold text-sm shadow-2xl hover:shadow-[0_0_30px_rgba(190,198,224,0.4)] hover:scale-[1.025] active:scale-[0.98] transition-all duration-200 ease-out group cursor-pointer"
               >
                 <span>Get Started Now</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 transition-transform duration-200 ease-out group-hover:translate-x-1.5 group-hover:text-[#7bd0ff]" />
               </Link>
             </div>
           </div>

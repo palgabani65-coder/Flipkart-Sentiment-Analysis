@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, ThumbsUp, ThumbsDown, Minus } from 'lucide-react';
-import { 
+import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell, Legend
 } from 'recharts';
@@ -32,17 +32,36 @@ const WORST_PRODUCTS = [
   { name: 'Samsung S24', negative: 10 },
 ];
 
+import { useTheme } from '../../context/ThemeContext';
+
 const ChartTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="px-3 py-2 rounded-xl bg-[#0B0D16] text-white text-xs shadow-xl border border-[#252A3A]">
-        <p className="font-bold text-slate-300 mb-1">{label}</p>
-        {payload.map((p) => (
-          <div key={p.dataKey} className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color || p.fill }} />
-            <span>{p.dataKey}: {p.value}%</span>
-          </div>
-        ))}
+      <div className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#191C1D] text-[#191C1D] dark:text-white text-xs shadow-2xl border border-[#E5E7EB] dark:border-[#33373B] font-mono space-y-1.5 min-w-[140px]">
+        <p className="font-bold text-[#191C1D] dark:text-white pb-1 border-b border-[#E5E7EB] dark:border-[#2E3132]">{label}</p>
+        {payload.map((p) => {
+          const color = p.color || p.fill || p.stroke;
+          const isBlack = color === '#000000';
+          const isWhite = color === '#FFFFFF';
+          return (
+            <div key={p.dataKey} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div 
+                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                    isBlack 
+                      ? 'bg-[#000000] border border-black/20 ring-1 ring-black/10' 
+                      : isWhite 
+                        ? 'bg-white border border-slate-300' 
+                        : 'border border-slate-300 dark:border-slate-600'
+                  }`} 
+                  style={{ backgroundColor: color }} 
+                />
+                <span className="capitalize text-[#5C5F62] dark:text-[#A0A4A8]">{p.name || p.dataKey}:</span>
+              </div>
+              <span className="font-bold text-[#191C1D] dark:text-white">{p.value}%</span>
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -50,11 +69,13 @@ const ChartTooltip = ({ active, payload, label }) => {
 };
 
 export const AdminSentimentAnalytics = () => {
+  const { isDarkMode } = useTheme();
+
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-8 font-sans text-[#191C1D] dark:text-white transition-colors">
       <div>
-        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Platform Sentiment Analytics</h2>
-        <p className="text-xs text-slate-400 mt-1">Platform-wide sentiment distribution and trends across all sellers and products.</p>
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#191C1D] dark:text-white tracking-tight font-sans">Platform Sentiment Analytics</h2>
+        <p className="text-xs text-[#5C5F62] dark:text-[#A0A4A8] mt-1 font-mono">Platform-wide sentiment distribution and trends across all sellers and products.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -67,27 +88,30 @@ export const AdminSentimentAnalytics = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Overall Sentiment */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-2xl bg-white dark:bg-[#0F111A] border border-slate-200/80 dark:border-[#252A3A] shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-5">Overall Sentiment</h3>
+          className="p-6 rounded-2xl bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132] shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none font-sans">
+          <h3 className="text-base font-bold text-[#191C1D] dark:text-white mb-5 font-sans">Overall Sentiment</h3>
           <SentimentChart positive={72} neutral={17} negative={11} size={200} />
         </motion.div>
 
         {/* Sentiment Trend */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
-          className="p-6 rounded-2xl bg-white dark:bg-[#0F111A] border border-slate-200/80 dark:border-[#252A3A] shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-5">Sentiment Trend</h3>
+          className="p-6 rounded-2xl bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132] shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none font-sans">
+          <h3 className="text-base font-bold text-[#191C1D] dark:text-white mb-5 font-sans">Sentiment Trajectory Trend</h3>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={TREND}>
                 <defs>
-                  <linearGradient id="agP" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#22D3EE" stopOpacity={0.25}/><stop offset="95%" stopColor="#22D3EE" stopOpacity={0}/></linearGradient>
+                  <linearGradient id="agP" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={isDarkMode ? '#FFFFFF' : '#000000'} stopOpacity={0.2} />
+                    <stop offset="95%" stopColor={isDarkMode ? '#FFFFFF' : '#000000'} stopOpacity={0} />
+                  </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#252A3A" opacity={0.3} vertical={false} />
-                <XAxis dataKey="month" stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={false} unit="%" />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#2E3132' : '#F0F1F3'} vertical={false} />
+                <XAxis dataKey="month" stroke={isDarkMode ? '#A0A4A8' : '#94A3B8'} fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke={isDarkMode ? '#A0A4A8' : '#94A3B8'} fontSize={11} tickLine={false} axisLine={false} unit="%" />
                 <Tooltip content={<ChartTooltip />} />
-                <Area type="monotone" dataKey="positive" stroke="#22D3EE" strokeWidth={2.5} fillOpacity={1} fill="url(#agP)" />
-                <Area type="monotone" dataKey="negative" stroke="#F43F5E" strokeWidth={2} fillOpacity={0} fill="transparent" />
+                <Area type="monotone" dataKey="positive" stroke={isDarkMode ? '#FFFFFF' : '#000000'} strokeWidth={2.5} fillOpacity={1} fill="url(#agP)" />
+                <Area type="monotone" dataKey="negative" stroke={isDarkMode ? '#64748B' : '#7E7576'} strokeWidth={2} fillOpacity={0} fill="transparent" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -97,16 +121,16 @@ export const AdminSentimentAnalytics = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Products by Positive Sentiment */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-          className="p-6 rounded-2xl bg-white dark:bg-[#0F111A] border border-slate-200/80 dark:border-[#252A3A] shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-5">Top Products by Positive Sentiment</h3>
+          className="p-6 rounded-2xl bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132] shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none font-sans">
+          <h3 className="text-base font-bold text-[#191C1D] dark:text-white mb-5 font-sans">Top Products by Positive Sentiment</h3>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={TOP_PRODUCTS} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#252A3A" opacity={0.3} horizontal={false} />
-                <XAxis type="number" stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={false} unit="%" />
-                <YAxis type="category" dataKey="name" stroke="#94A3B8" fontSize={10} tickLine={false} axisLine={false} width={110} />
-                <Tooltip content={<ChartTooltip />} />
-                <Bar dataKey="positive" fill="#22D3EE" radius={[0, 6, 6, 0]} barSize={14} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#2E3132' : '#F0F1F3'} horizontal={false} />
+                <XAxis type="number" stroke={isDarkMode ? '#A0A4A8' : '#94A3B8'} fontSize={11} tickLine={false} axisLine={false} unit="%" />
+                <YAxis type="category" dataKey="name" stroke={isDarkMode ? '#A0A4A8' : '#94A3B8'} fontSize={10} tickLine={false} axisLine={false} width={110} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)', radius: 4 }} />
+                <Bar dataKey="positive" fill={isDarkMode ? '#FFFFFF' : '#000000'} radius={[0, 6, 6, 0]} barSize={14} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -114,16 +138,16 @@ export const AdminSentimentAnalytics = () => {
 
         {/* Highest Negative Sentiment */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}
-          className="p-6 rounded-2xl bg-white dark:bg-[#0F111A] border border-slate-200/80 dark:border-[#252A3A] shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-5">Products with Highest Negative Sentiment</h3>
+          className="p-6 rounded-2xl bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132] shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none font-sans">
+          <h3 className="text-base font-bold text-[#191C1D] dark:text-white mb-5 font-sans">Products with Highest Negative Sentiment</h3>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={WORST_PRODUCTS} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#252A3A" opacity={0.3} horizontal={false} />
-                <XAxis type="number" stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={false} unit="%" />
-                <YAxis type="category" dataKey="name" stroke="#94A3B8" fontSize={10} tickLine={false} axisLine={false} width={110} />
-                <Tooltip content={<ChartTooltip />} />
-                <Bar dataKey="negative" fill="#F43F5E" radius={[0, 6, 6, 0]} barSize={14} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#2E3132' : '#F0F1F3'} horizontal={false} />
+                <XAxis type="number" stroke={isDarkMode ? '#A0A4A8' : '#94A3B8'} fontSize={11} tickLine={false} axisLine={false} unit="%" />
+                <YAxis type="category" dataKey="name" stroke={isDarkMode ? '#A0A4A8' : '#94A3B8'} fontSize={10} tickLine={false} axisLine={false} width={110} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)', radius: 4 }} />
+                <Bar dataKey="negative" fill="#BA1A1A" radius={[0, 6, 6, 0]} barSize={14} />
               </BarChart>
             </ResponsiveContainer>
           </div>

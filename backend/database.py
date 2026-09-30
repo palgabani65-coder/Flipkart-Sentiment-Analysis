@@ -366,6 +366,19 @@ class PostgreSQLManager:
                 reviews_cnt = conn.execute(text("SELECT COUNT(*) FROM reviews;")).scalar() or 0
                 otps_cnt = conn.execute(text("SELECT COUNT(*) FROM otps;")).scalar() or 0
                 users_list = [dict(r) for r in conn.execute(text("SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 50;")).mappings().all()]
+                return {
+                    "connected": True,
+                    "users_count": users_cnt,
+                    "reviews_count": reviews_cnt,
+                    "otps_count": otps_cnt,
+                    "users": users_list
+                }
+        except Exception as e:
+            print(f"[PostgreSQL Error] Failed to fetch database stats: {e}")
+            return {
+                "connected": False,
+                "message": str(e)
+            }
 
     def update_user_details(self, user_id: str, name: Optional[str] = None, email: Optional[str] = None, role: Optional[str] = None) -> bool:
         """Update user name, email, or role by user_id."""
@@ -409,4 +422,132 @@ class PostgreSQLManager:
             print(f"[PostgreSQL Error] Failed to delete user {user_id}: {e}")
             return False
 
+    def seed_reviews_if_empty(self, limit: int = 1000):
+        """Seed initial real Flipkart reviews from cleaned_flipkart_reviews.csv if table is empty."""
+        if not self.is_connected():
+            return 0
+        try:
+            with self.engine.connect() as conn:
+                count = conn.execute(text("SELECT COUNT(*) FROM reviews;")).scalar() or 0
+                if count > 0:
+                    return count
+
+            csv_path = config.CLEANED_DATA_PATH
+            if not csv_path.exists():
+                return 0
+
+            import pandas as pd
+            df = pd.read_csv(csv_path, nrows=limit)
+            
+            insert_sql = """
+            INSERT INTO reviews (product_name, product_price, rate, review, summary, cleaned_review, full_review, sentiment)
+            VALUES (:product_name, :product_price, :rate, :review, :summary, :cleaned_review, :full_review, :sentiment);
+            """
+            
+            records = []
+            for _, row in df.iterrows():
+                try:
+                    price_val = float(str(row.get('product_price_clean', 0)).replace(',', '')) if pd.notna(row.get('product_price_clean')) else None
+                except Exception:
+                    price_val = None
+                
+                try:
+                    rate_val = int(float(row.get('Rate_clean', 5))) if pd.notna(row.get('Rate_clean')) else 5
+                except Exception:
+                    rate_val = 5
+
+                records.append({
+                    "product_name": str(row.get('product_name_clean') or row.get('product_name') or 'Flipkart Product')[:500],
+                    "product_price": price_val,
+                    "rate": rate_val,
+                    "review": str(row.get('Review', ''))[:1500],
+                    "summary": str(row.get('Summary', ''))[:500],
+                    "cleaned_review": str(row.get('cleaned_review', ''))[:1500],
+                    "full_review": str(row.get('full_review', ''))[:1500],
+                    "sentiment": str(row.get('Sentiment', 'positive')).title()
+                })
+
+            with self.engine.begin() as conn:
+                conn.execute(text(insert_sql), records)
+            print(f"[PostgreSQL] Successfully seeded {len(records)} Flipkart reviews into database.")
+            return len(records)
+        except Exception as e:
+            print(f"[PostgreSQL Error] Seeding reviews failed: {e}")
+            return 0
+
+    def get_reviews(self, limit: int = 50, offset: int = 0, sentiment: Optional[str] = None, search: Optional[str] = None) -> dict:
+        """Fetch paginated real reviews from database with optional sentiment/search filters."""
+        if not self.is_connected():
+            return {"total": 0, "reviews": []}
+        try:
+            clauses = ["1=1"]
+            params = {"limit": limit, "offset": offset}
+
+            if sentiment and sentiment.lower() != 'all':
+                clauses.append("LOWER(sentiment) = :sentiment")
+                params["sentiment"] = sentiment.lower()
+
+            if search and search.strip():
+                clauses.append("(LOWER(review) LIKE :search OR LOWER(product_name) LIKE :search OR LOWER(summary) LIKE :search)")
+                params["search"] = f"%{search.lower().strip()}%"
+
+            where_str = " AND ".join(clauses)
+            count_sql = f"SELECT COUNT(*) FROM reviews WHERE {where_str};"
+            select_sql = f"""
+            SELECT id, product_name, product_price, rate, review, summary, sentiment, created_at 
+            FROM reviews 
+            WHERE {where_str} 
+            ORDER BY id ASC 
+            LIMIT :limit OFFSET :offset;
+            """
+
+            with self.engine.connect() as conn:
+                total = conn.execute(text(count_sql), params).scalar() or 0
+                rows = conn.execute(text(select_sql), params).mappings().all()
+                return {
+                    "total": total,
+                    "limit": limit,
+                    "offset": offset,
+                    "reviews": [dict(r) for r in rows]
+                }
+        except Exception as e:
+            print(f"[PostgreSQL Error] Failed to get reviews: {e}")
+            return {"total": 0, "reviews": []}
+
+    def get_products_summary(self) -> list:
+        """Fetch aggregate metrics grouped by product from database."""
+        if not self.is_connected():
+            return []
+        try:
+            sql = """
+            SELECT 
+                product_name,
+                COUNT(*) as total_reviews,
+                ROUND(AVG(rate), 1) as avg_rating,
+                ROUND(AVG(product_price), 2) as avg_price,
+                SUM(CASE WHEN LOWER(sentiment) = 'positive' THEN 1 ELSE 0 END) as positive_count,
+                SUM(CASE WHEN LOWER(sentiment) = 'negative' THEN 1 ELSE 0 END) as negative_count,
+                SUM(CASE WHEN LOWER(sentiment) = 'neutral' THEN 1 ELSE 0 END) as neutral_count
+            FROM reviews
+            WHERE product_name IS NOT NULL AND product_name != ''
+            GROUP BY product_name
+            ORDER BY total_reviews DESC
+            LIMIT 50;
+            """
+            with self.engine.connect() as conn:
+                rows = conn.execute(text(sql)).mappings().all()
+                results = []
+                for r in rows:
+                    item = dict(r)
+                    total = item.get("total_reviews", 0)
+                    pos = item.get("positive_count", 0)
+                    item["sentiment_score"] = round((pos / total * 100), 1) if total > 0 else 0
+                    results.append(item)
+                return results
+        except Exception as e:
+            print(f"[PostgreSQL Error] Failed to get products summary: {e}")
+            return []
+
+
 db_manager = PostgreSQLManager()
+

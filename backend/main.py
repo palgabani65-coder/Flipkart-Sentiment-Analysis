@@ -12,6 +12,7 @@ from typing import List, Optional
 import config
 from database import db_manager
 from predict import SentimentPredictor
+from scraper import scrape_flipkart_reviews
 import auth
 import email_utils
 
@@ -83,6 +84,10 @@ if FASTAPI_AVAILABLE:
     class ScrapeRequest(BaseModel):
         url: str = Field(..., description="Flipkart Product Page URL", example="https://www.flipkart.com/samsung-galaxy-s26-5g-black-256-gb/p/itm0ca5d0430e1c1")
 
+    class ScrapeReviewsRequest(BaseModel):
+        url: str = Field(..., description="Flipkart Product Page URL to scrape reviews from")
+        max_pages: Optional[int] = Field(3, description="Number of review pages to scrape (1-5)", ge=1, le=5)
+
     @app.get("/")
     def read_root():
         return {
@@ -93,7 +98,10 @@ if FASTAPI_AVAILABLE:
                 "/api/health",
                 "/api/predict",
                 "/api/predict/batch",
-                "/api/scrape-flipkart"
+                "/api/scrape-flipkart",
+                "/api/scrape-reviews",
+                "/api/reviews",
+                "/api/products"
             ]
         }
 
@@ -143,6 +151,17 @@ if FASTAPI_AVAILABLE:
         if not success:
             raise HTTPException(status_code=404, detail=f"User '{user_id}' not found.")
         return {"message": f"User '{user_id}' deleted successfully.", "user_id": user_id}
+
+    @app.get("/api/reviews")
+    def get_reviews_endpoint(limit: int = 50, offset: int = 0, sentiment: Optional[str] = None, search: Optional[str] = None):
+        """Fetch paginated real reviews from PostgreSQL database."""
+        return db_manager.get_reviews(limit=limit, offset=offset, sentiment=sentiment, search=search)
+
+    @app.get("/api/products")
+    def get_products_endpoint():
+        """Fetch product catalogs and sentiment analytics from database."""
+        products = db_manager.get_products_summary()
+        return {"total": len(products), "products": products}
 
     # REAL LIVE FLIPKART WEBSCRAPER ENDPOINT
     @app.post("/api/scrape-flipkart")
@@ -254,6 +273,103 @@ if FASTAPI_AVAILABLE:
             "emoji": emoji,
             "url": url,
             "isLive": True
+        }
+
+    # ─── LIVE FLIPKART REVIEW SCRAPER + SENTIMENT ANALYSIS ENDPOINT ───
+    @app.post("/api/scrape-reviews")
+    def scrape_reviews_endpoint(req: ScrapeReviewsRequest):
+        """Scrape real customer reviews from a Flipkart product page and run ML sentiment analysis on each."""
+        global predictor
+
+        url = req.url.strip()
+        if not url or ("flipkart.com" not in url.lower()):
+            raise HTTPException(status_code=400, detail="Please enter a valid Flipkart product URL.")
+
+        max_pages = req.max_pages or 3
+
+        # 1. Scrape reviews from Flipkart
+        try:
+            scrape_result = scrape_flipkart_reviews(url, max_pages=max_pages)
+        except Exception as e:
+            print(f"[ScrapeReviews Error] {e}")
+            raise HTTPException(status_code=500, detail=f"Scraping failed: {str(e)}")
+
+        reviews = scrape_result.get("reviews", [])
+        product = scrape_result.get("product", {})
+        logs = scrape_result.get("logs", [])
+
+        # 2. Run sentiment analysis on each review
+        analyzed_reviews = []
+        sentiment_counts = {"Positive": 0, "Negative": 0, "Neutral": 0}
+        total_confidence = 0.0
+
+        if predictor is None:
+            try:
+                predictor = SentimentPredictor()
+            except Exception as e:
+                print(f"[Predictor Init Error] {e}")
+
+        logs.append({"text": f"> Running sentiment model on {len(reviews)} reviews...", "type": "pulse"})
+
+        for i, rev in enumerate(reviews):
+            review_text = rev.get("text", "").strip()
+            if not review_text or len(review_text) < 5:
+                continue
+
+            sentiment_data = {"sentiment": "Neutral", "confidence": {"Positive": 0.33, "Negative": 0.33, "Neutral": 0.34}}
+
+            if predictor:
+                try:
+                    pred = predictor.predict(review_text)
+                    sentiment_data = pred
+                except Exception:
+                    pass
+
+            sentiment_label = sentiment_data.get("sentiment", "Neutral")
+            confidence_dict = sentiment_data.get("confidence", {})
+
+            # Calculate the max confidence value
+            max_conf = 0.0
+            if isinstance(confidence_dict, dict):
+                max_conf = max(confidence_dict.values()) if confidence_dict else 0.5
+            elif isinstance(confidence_dict, (int, float)):
+                max_conf = float(confidence_dict)
+
+            sentiment_counts[sentiment_label] = sentiment_counts.get(sentiment_label, 0) + 1
+            total_confidence += max_conf
+
+            analyzed_reviews.append({
+                "id": f"rev_{i+1}",
+                "text": review_text,
+                "title": rev.get("title", ""),
+                "reviewer": rev.get("reviewer", "Flipkart Customer"),
+                "rating": rev.get("rating"),
+                "date": rev.get("date", ""),
+                "sentiment": sentiment_label,
+                "confidence": round(max_conf * 100, 1) if max_conf <= 1.0 else round(max_conf, 1),
+                "confidence_breakdown": confidence_dict
+            })
+
+        total_analyzed = len(analyzed_reviews)
+        avg_confidence = round((total_confidence / total_analyzed * 100), 1) if total_analyzed > 0 and total_confidence <= total_analyzed else round(total_confidence / max(total_analyzed, 1), 1)
+
+        logs.append({"text": f"[INFO] Sentiment analysis complete: {total_analyzed} reviews processed.", "type": "info"})
+        logs.append({"text": f"> Results: {sentiment_counts.get('Positive', 0)} positive, {sentiment_counts.get('Negative', 0)} negative, {sentiment_counts.get('Neutral', 0)} neutral.", "type": "primary"})
+        logs.append({"text": f"# Pipeline finished successfully.", "type": "primary"})
+
+        return {
+            "product": product,
+            "reviews": analyzed_reviews,
+            "total_scraped": scrape_result.get("total_scraped", 0),
+            "total_analyzed": total_analyzed,
+            "pages_scraped": scrape_result.get("pages_scraped", max_pages),
+            "sentiment_summary": {
+                "positive": sentiment_counts.get("Positive", 0),
+                "negative": sentiment_counts.get("Negative", 0),
+                "neutral": sentiment_counts.get("Neutral", 0),
+                "avg_confidence": avg_confidence
+            },
+            "logs": logs
         }
 
     @app.post("/api/predict", response_model=SentimentResponse)
@@ -392,8 +508,59 @@ if FASTAPI_AVAILABLE:
                 "name": name,
                 "email": email_clean,
                 "role": role,
-                "storeName": "Gabani Electronics"
+                "storeName": "Apex Electronics"
             }
+        }
+
+    @app.post("/api/auth/forgot-password")
+    def forgot_password_endpoint(req: ForgotPasswordRequest):
+        if not req.email or "@" not in req.email:
+            raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+        
+        email_clean = req.email.lower().strip()
+        user = db_manager.get_user_by_email(email_clean)
+        if not user:
+            if db_manager.is_connected():
+                raise HTTPException(status_code=404, detail="No account registered with this email address.")
+            return {
+                "message": f"Password reset OTP code sent to {email_clean}",
+                "email": email_clean
+            }
+        
+        otp_code = email_utils.generate_otp()
+        db_manager.save_otp(email_clean, otp_code, expire_minutes=config.OTP_EXPIRE_MINUTES)
+        email_utils.send_password_reset_email(email_clean, otp_code)
+        
+        return {
+            "message": f"Password reset OTP code sent to {email_clean}",
+            "email": email_clean
+        }
+
+    @app.post("/api/auth/reset-password")
+    def reset_password_endpoint(req: ResetPasswordRequest):
+        if not req.email or not req.otp or not req.new_password:
+            raise HTTPException(status_code=400, detail="Email, OTP code, and new password are required.")
+        
+        if len(req.new_password) < 4:
+            raise HTTPException(status_code=400, detail="New password must be at least 4 characters long.")
+        
+        email_clean = req.email.lower().strip()
+        user = db_manager.get_user_by_email(email_clean)
+        if not user and db_manager.is_connected():
+            raise HTTPException(status_code=404, detail="No account registered with this email address.")
+        
+        otp_valid = db_manager.verify_otp(email_clean, req.otp)
+        if not otp_valid:
+            raise HTTPException(status_code=400, detail="Invalid or expired OTP code.")
+        
+        hashed_pwd = auth.hash_password(req.new_password)
+        success = db_manager.update_user_password(email_clean, hashed_pwd)
+        if not success and db_manager.is_connected():
+            raise HTTPException(status_code=500, detail="Failed to update user password in database.")
+        
+        return {
+            "message": "Password reset successfully. You can now log in with your new password.",
+            "email": email_clean
         }
 
 

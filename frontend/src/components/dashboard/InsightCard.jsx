@@ -41,13 +41,13 @@ const typeConfig = {
   },
 };
 
-export const InsightCard = ({ 
-  type = 'issue', 
-  title, 
-  description, 
-  mentionRate, 
+export const InsightCard = ({
+  type = 'issue',
+  title,
+  description,
+  mentionRate,
   recommendation,
-  index = 0 
+  index = 0
 }) => {
   const config = typeConfig[type] || typeConfig.issue;
   const Icon = config.icon;
@@ -57,12 +57,12 @@ export const InsightCard = ({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, duration: 0.35 }}
-      className={`p-6 rounded-3xl bg-white dark:bg-[#12101B] border border-slate-200/80 dark:border-[#1E1A2E] shadow-xs hover:border-[#8B5CF6]/40 transition-all space-y-4`}
+      className={`p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-xs hover:border-[#CBD5E1] transition-all space-y-4 font-sans`}
     >
       {/* Type badge */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-xl ${config.bg} flex items-center justify-center ${config.color}`}>
+          <div className={`w-8 h-8 rounded-lg ${config.bg} flex items-center justify-center ${config.color}`}>
             <Icon className="w-4 h-4" />
           </div>
           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider font-mono ${config.badge}`}>
@@ -74,10 +74,10 @@ export const InsightCard = ({
 
       {/* Content */}
       <div className="space-y-2">
-        <h4 className="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">
+        <h4 className="text-sm font-bold text-[#171C1F] leading-snug">
           "{title}"
         </h4>
-        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+        <p className="text-xs text-[#44474C] leading-relaxed">
           {description}
         </p>
       </div>
@@ -85,16 +85,16 @@ export const InsightCard = ({
       {/* Mention rate */}
       {mentionRate && (
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">Mentioned in:</span>
-          <span className={`text-xs font-extrabold ${config.color}`}>{mentionRate}</span>
+          <span className="text-[10px] font-bold text-[#44474C] uppercase">Mentioned in:</span>
+          <span className={`text-xs font-bold ${config.color}`}>{mentionRate}</span>
         </div>
       )}
 
       {/* Recommendation */}
       {recommendation && (
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#171424] border border-slate-100 dark:border-[#1E1A2E]">
-          <p className="text-[10px] font-bold uppercase text-[#C4B5FD] mb-1 font-mono">Recommendation</p>
-          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+        <div className="p-3.5 rounded-xl bg-[#F0F4F8] border border-[#E2E8F0]">
+          <p className="text-[10px] font-bold uppercase text-[#334155] mb-1 font-sans">Recommendation</p>
+          <p className="text-xs text-[#171C1F] leading-relaxed font-medium">
             {recommendation}
           </p>
         </div>

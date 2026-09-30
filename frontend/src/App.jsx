@@ -34,6 +34,7 @@ const SellerProfile = lazy(() => import('./pages/dashboard/SellerProfile').then(
 const SellerSettings = lazy(() => import('./pages/dashboard/SellerSettings').then((m) => ({ default: m.SellerSettings })));
 const SellerNotifications = lazy(() => import('./pages/dashboard/SellerNotifications').then((m) => ({ default: m.SellerNotifications })));
 const SellerReports = lazy(() => import('./pages/dashboard/SellerReports').then((m) => ({ default: m.SellerReports })));
+const WebScraper = lazy(() => import('./pages/dashboard/WebScraper').then((m) => ({ default: m.WebScraper })));
 
 // Admin Dashboard Pages
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview').then((m) => ({ default: m.AdminOverview })));
@@ -63,7 +64,7 @@ export const App = () => {
                 <Route
                   path="/dashboard"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><UserDashboardHome /></UserLayout>
                     </RoleProtectedRoute>
                   }
@@ -71,7 +72,7 @@ export const App = () => {
                 <Route
                   path="/dashboard/products"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><SellerProducts /></UserLayout>
                     </RoleProtectedRoute>
                   }
@@ -79,7 +80,7 @@ export const App = () => {
                 <Route
                   path="/dashboard/products/:productId"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><ProductDetail /></UserLayout>
                     </RoleProtectedRoute>
                   }
@@ -87,7 +88,7 @@ export const App = () => {
                 <Route
                   path="/dashboard/reviews"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><SellerReviews /></UserLayout>
                     </RoleProtectedRoute>
                   }
@@ -95,7 +96,7 @@ export const App = () => {
                 <Route
                   path="/dashboard/sentiment-analysis"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><SellerSentimentAnalysis /></UserLayout>
                     </RoleProtectedRoute>
                   }
@@ -103,7 +104,7 @@ export const App = () => {
                 <Route
                   path="/dashboard/analytics"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><SellerAnalytics /></UserLayout>
                     </RoleProtectedRoute>
                   }
@@ -111,7 +112,7 @@ export const App = () => {
                 <Route
                   path="/dashboard/insights"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><SellerInsights /></UserLayout>
                     </RoleProtectedRoute>
                   }
@@ -119,7 +120,15 @@ export const App = () => {
                 <Route
                   path="/dashboard/review-history"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
+                      <UserLayout><ReviewHistory /></UserLayout>
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/history"
+                  element={
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><ReviewHistory /></UserLayout>
                     </RoleProtectedRoute>
                   }
@@ -127,7 +136,7 @@ export const App = () => {
                 <Route
                   path="/dashboard/profile"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><SellerProfile /></UserLayout>
                     </RoleProtectedRoute>
                   }
@@ -135,7 +144,7 @@ export const App = () => {
                 <Route
                   path="/dashboard/settings"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><SellerSettings /></UserLayout>
                     </RoleProtectedRoute>
                   }
@@ -143,7 +152,7 @@ export const App = () => {
                 <Route
                   path="/dashboard/notifications"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><SellerNotifications /></UserLayout>
                     </RoleProtectedRoute>
                   }
@@ -151,8 +160,16 @@ export const App = () => {
                 <Route
                   path="/dashboard/reports"
                   element={
-                    <RoleProtectedRoute allowedRoles={['user', 'admin']}>
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
                       <UserLayout><SellerReports /></UserLayout>
+                    </RoleProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/scraper"
+                  element={
+                    <RoleProtectedRoute allowedRoles={['user']} adminRedirect="/admin">
+                      <UserLayout><WebScraper /></UserLayout>
                     </RoleProtectedRoute>
                   }
                 />

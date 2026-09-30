@@ -6,7 +6,11 @@ export default function Orb({
   hoverIntensity = 0.2,
   rotateOnHover = true,
   forceHoverState = false,
-  backgroundColor = '#000000'
+  backgroundColor = '#000000',
+  color1 = '#7BD0FF', // muted cyan from "NLP ENGINE ONLINE"
+  color2 = '#BEC6E0', // soft blue-lavender from primary buttons & sign-in accent
+  color3 = '#091528', // subdued deep slate/navy shadow
+  ambientRotation = true
 }) {
   const ctnDom = useRef(null);
 
@@ -31,6 +35,9 @@ export default function Orb({
     uniform float rot;
     uniform float hoverIntensity;
     uniform vec3 backgroundColor;
+    uniform vec3 color1;
+    uniform vec3 color2;
+    uniform vec3 color3;
     varying vec2 vUv;
 
     vec3 rgb2yiq(vec3 c) {
@@ -48,6 +55,7 @@ export default function Orb({
     }
     
     vec3 adjustHue(vec3 color, float hueDeg) {
+      if (abs(hueDeg) < 0.01) return color;
       float hueRad = hueDeg * 3.14159265 / 180.0;
       vec3 yiq = rgb2yiq(color);
       float cosA = cos(hueRad);
@@ -100,9 +108,6 @@ export default function Orb({
       return vec4(colorIn.rgb / (a + 1e-5), a);
     }
 
-    const vec3 baseColor1 = vec3(0.611765, 0.262745, 0.996078);
-    const vec3 baseColor2 = vec3(0.298039, 0.760784, 0.913725);
-    const vec3 baseColor3 = vec3(0.062745, 0.078431, 0.600000);
     const float innerRadius = 0.6;
     const float noiseScale = 0.65;
 
@@ -114,38 +119,41 @@ export default function Orb({
     }
 
     vec4 draw(vec2 uv) {
-      vec3 color1 = adjustHue(baseColor1, hue);
-      vec3 color2 = adjustHue(baseColor2, hue);
-      vec3 color3 = adjustHue(baseColor3, hue);
+      vec3 c1 = adjustHue(color1, hue);
+      vec3 c2 = adjustHue(color2, hue);
+      vec3 c3 = adjustHue(color3, hue);
       
       float ang = atan(uv.y, uv.x);
       float len = length(uv);
       float invLen = len > 0.0 ? 1.0 / len : 0.0;
 
-            float bgLuminance = dot(backgroundColor, vec3(0.299, 0.587, 0.114));
+      float bgLuminance = dot(backgroundColor, vec3(0.299, 0.587, 0.114));
       
-      float n0 = snoise3(vec3(uv * noiseScale, iTime * 0.5)) * 0.5 + 0.5;
+      // Extremely slow, subtle pulsing glow (~16s loop)
+      float pulse = 0.94 + 0.06 * sin(iTime * 0.39);
+
+      float n0 = snoise3(vec3(uv * noiseScale, iTime * 0.45)) * 0.5 + 0.5;
       float r0 = mix(mix(innerRadius, 1.0, 0.4), mix(innerRadius, 1.0, 0.6), n0);
       float d0 = distance(uv, (r0 * invLen) * uv);
-      float v0 = light1(1.0, 10.0, d0);
+      float v0 = light1(1.0, 10.0, d0) * pulse;
       v0 *= smoothstep(r0 * 1.05, r0, len);
-            float innerFade = smoothstep(r0 * 0.8, r0 * 0.95, len);
+      float innerFade = smoothstep(r0 * 0.8, r0 * 0.95, len);
       v0 *= mix(innerFade, 1.0, bgLuminance * 0.7);
-      float cl = cos(ang + iTime * 2.0) * 0.5 + 0.5;
+      float cl = cos(ang + iTime * 1.8) * 0.5 + 0.5;
       
-      float a = iTime * -1.0;
+      float a = iTime * -0.9;
       vec2 pos = vec2(cos(a), sin(a)) * r0;
       float d = distance(uv, pos);
-      float v1 = light2(1.5, 5.0, d);
+      float v1 = light2(1.5, 5.0, d) * pulse;
       v1 *= light1(1.0, 50.0, d0);
       
       float v2 = smoothstep(1.0, mix(innerRadius, 1.0, n0 * 0.5), len);
       float v3 = smoothstep(innerRadius, mix(innerRadius, 1.0, 0.5), len);
       
-      vec3 colBase = mix(color1, color2, cl);
+      vec3 colBase = mix(c1, c2, cl);
       float fadeAmount = mix(1.0, 0.1, bgLuminance);
       
-      vec3 darkCol = mix(color3, colBase, v0);
+      vec3 darkCol = mix(c3, colBase, v0);
       darkCol = (darkCol + v1) * v2 * v3;
       darkCol = clamp(darkCol, 0.0, 1.0);
       
@@ -203,7 +211,10 @@ export default function Orb({
         hover: { value: 0 },
         rot: { value: 0 },
         hoverIntensity: { value: hoverIntensity },
-        backgroundColor: { value: hexToVec3(backgroundColor) }
+        backgroundColor: { value: hexToVec3(backgroundColor) },
+        color1: { value: hexToVec3(color1) },
+        color2: { value: hexToVec3(color2) },
+        color3: { value: hexToVec3(color3) }
       }
     });
 
@@ -270,11 +281,17 @@ export default function Orb({
       program.uniforms.hue.value = hue;
       program.uniforms.hoverIntensity.value = hoverIntensity;
       program.uniforms.backgroundColor.value = hexToVec3(backgroundColor);
+      program.uniforms.color1.value = hexToVec3(color1);
+      program.uniforms.color2.value = hexToVec3(color2);
+      program.uniforms.color3.value = hexToVec3(color3);
 
       const effectiveHover = forceHoverState ? 1 : targetHover;
       program.uniforms.hover.value += (effectiveHover - program.uniforms.hover.value) * 0.1;
 
-      if (rotateOnHover && effectiveHover > 0.5) {
+      // Ambient very slow rotation (~18s full 360 loop = ~0.35 rad/s) + extra rotation when hovered
+      if (ambientRotation) {
+        currentRot += dt * (0.35 + (effectiveHover > 0.5 ? rotationSpeed : 0));
+      } else if (rotateOnHover && effectiveHover > 0.5) {
         currentRot += dt * rotationSpeed;
       }
       program.uniforms.rot.value = currentRot;
@@ -293,7 +310,7 @@ export default function Orb({
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hue, hoverIntensity, rotateOnHover, forceHoverState, backgroundColor]);
+  }, [hue, hoverIntensity, rotateOnHover, forceHoverState, backgroundColor, color1, color2, color3, ambientRotation]);
 
   return <div ref={ctnDom} className="w-full h-full" />;
 }

@@ -17,40 +17,40 @@ export const AdminSettings = () => {
 
   const Toggle = ({ checked, onChange }) => (
     <button onClick={onChange}
-      className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ${checked ? 'bg-[#22D3EE]' : 'bg-slate-300 dark:bg-slate-700'}`}>
-      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white dark:bg-slate-950 shadow-sm transition-transform ${checked ? 'translate-x-5.5' : 'translate-x-0.5'}`} />
+      className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${checked ? 'bg-[#000000] dark:bg-white' : 'bg-[#E5E7EB] dark:bg-[#2E3132]'}`}>
+      <div className={`absolute top-1 w-4 h-4 rounded-full transition-transform ${checked ? 'translate-x-6 bg-white dark:bg-black' : 'translate-x-1 bg-white dark:bg-[#A0A4A8]'}`} />
     </button>
   );
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-8">
+    <div className="max-w-3xl mx-auto space-y-6 pb-8 font-sans text-[#191C1D] dark:text-white transition-colors">
       <div>
-        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Admin Settings</h2>
-        <p className="text-xs text-slate-400 mt-1">System infrastructure configuration and service status.</p>
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#191C1D] dark:text-white tracking-tight font-sans">Admin Settings</h2>
+        <p className="text-xs text-[#5C5F62] dark:text-[#A0A4A8] mt-1 font-mono">System infrastructure configuration and service status.</p>
       </div>
 
       {/* System Status */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-        className="p-6 rounded-2xl bg-white dark:bg-[#0F111A] border border-slate-200/80 dark:border-[#252A3A] shadow-sm">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-          <Shield className="w-4 h-4 text-cyan-600 dark:text-[#22D3EE]" />
+        className="p-6 rounded-2xl bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132] shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none font-sans">
+        <h3 className="text-base font-bold text-[#191C1D] dark:text-white mb-4 flex items-center gap-2 font-sans">
+          <Shield className="w-4 h-4 text-[#000000] dark:text-white" />
           System Infrastructure
         </h3>
         <div className="space-y-3">
           {SYSTEM_STATUS.map((sys) => {
             const Icon = sys.icon;
             return (
-              <div key={sys.label} className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-[#090D16]">
+              <div key={sys.label} className="flex items-center justify-between p-3.5 rounded-xl bg-[#F8F9FA] dark:bg-[#242729] border border-[#EDEEEF] dark:border-[#33373B]">
                 <div className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 text-slate-400" />
+                  <Icon className="w-4 h-4 text-[#5C5F62] dark:text-[#A0A4A8]" />
                   <div>
-                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{sys.label}</p>
-                    <p className="text-[10px] text-slate-400 font-mono">{sys.value}</p>
+                    <p className="text-xs font-semibold text-[#191C1D] dark:text-white font-sans">{sys.label}</p>
+                    <p className="text-[10px] text-[#5C5F62] dark:text-[#A0A4A8] font-mono">{sys.value}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-[#22D3EE] animate-pulse" />
-                  <span className="text-[10px] font-bold text-cyan-600 dark:text-[#22D3EE]">{sys.status}</span>
+                <div className="flex items-center gap-1.5 font-mono">
+                  <div className="w-2 h-2 rounded-full bg-[#000000] dark:bg-white animate-pulse" />
+                  <span className="text-[10px] font-semibold text-[#000000] dark:text-white">{sys.status}</span>
                 </div>
               </div>
             );
@@ -60,29 +60,29 @@ export const AdminSettings = () => {
 
       {/* Toggles */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
-        className="p-6 rounded-2xl bg-white dark:bg-[#0F111A] border border-slate-200/80 dark:border-[#252A3A] shadow-sm space-y-4">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Settings className="w-4 h-4 text-cyan-600 dark:text-[#22D3EE]" />
+        className="p-6 rounded-2xl bg-white dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132] shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none space-y-4 font-sans">
+        <h3 className="text-base font-bold text-[#191C1D] dark:text-white flex items-center gap-2 font-sans">
+          <Settings className="w-4 h-4 text-[#000000] dark:text-white" />
           Preferences
         </h3>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Dark Mode</p>
-            <p className="text-[10px] text-slate-400">Current: {theme === 'dark' ? 'Dark' : 'Light'}</p>
+            <p className="text-xs font-semibold text-[#191C1D] dark:text-white font-sans">Dark Mode</p>
+            <p className="text-[10px] text-[#5C5F62] dark:text-[#A0A4A8] mt-0.5 font-mono">Current: {theme === 'dark' ? 'Dark' : 'Light'} theme</p>
           </div>
           <Toggle checked={theme === 'dark'} onChange={toggleTheme} />
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Maintenance Mode</p>
-            <p className="text-[10px] text-slate-400">Disable seller access temporarily</p>
+            <p className="text-xs font-semibold text-[#191C1D] dark:text-white font-sans">Maintenance Mode</p>
+            <p className="text-[10px] text-[#5C5F62] dark:text-[#A0A4A8] mt-0.5 font-mono">Disable seller access temporarily</p>
           </div>
           <Toggle checked={maintenanceMode} onChange={() => setMaintenanceMode(!maintenanceMode)} />
         </div>
       </motion.div>
 
       <button onClick={() => addToast('Settings saved', 'success')}
-        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#22D3EE] to-[#818CF8] text-slate-950 font-extrabold text-xs flex items-center gap-2 shadow-md shadow-cyan-500/20 transition-all cursor-pointer">
+        className="px-5 py-2.5 rounded-lg bg-[#000000] dark:bg-white hover:bg-[#1B1B1B] dark:hover:bg-slate-100 text-white dark:text-black font-semibold font-mono text-xs flex items-center gap-2 shadow-xs transition-colors cursor-pointer">
         <Save className="w-4 h-4" /> Save Settings
       </button>
     </div>

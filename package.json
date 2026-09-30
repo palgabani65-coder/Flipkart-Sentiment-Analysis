@@ -1,0 +1,13 @@
+{
+  "name": "flipsentiment-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "flipsentiment": "npm --prefix frontend run flipsentiment",
+    "all": "python run.py",
+    "run:all": "python run.py",
+    "dev": "npm --prefix frontend run dev",
+    "start": "npm --prefix frontend start",
+    "build": "npm --prefix frontend run build"
+  }
+}

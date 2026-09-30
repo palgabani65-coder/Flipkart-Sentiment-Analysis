@@ -45,7 +45,7 @@ export const authService = {
           email: email,
           name: name,
           role: role,
-          storeName: 'Gabani Electronics'
+          storeName: 'Apex Electronics'
         };
         localStorage.setItem('fk_token', token);
         localStorage.setItem('fk_user', JSON.stringify(user));

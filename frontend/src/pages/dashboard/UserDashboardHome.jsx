@@ -1,62 +1,52 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Package, MessageSquareText, ThumbsUp, ThumbsDown, Star,
-  TrendingUp, TrendingDown, ArrowRight, Lightbulb, Sparkles,
-  AlertTriangle, Filter, CheckCircle2, XCircle
+import {
+  MessageSquare, Star, Smile, Frown, TrendingUp, TrendingDown,
+  Minus, Download, MoreHorizontal, ArrowRight
 } from 'lucide-react';
-import { 
-  AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-import { StatCard } from '../../components/dashboard/StatCard';
+import { useNotification } from '../../context/NotificationContext';
+import { useTheme } from '../../context/ThemeContext';
 import { SentimentChart } from '../../components/dashboard/SentimentChart';
-import { SentimentBadge } from '../../components/common/SentimentBadge';
-
-const TOP_PRODUCTS_DATA = [
-  { id: 'p1', name: 'boAt Rockerz 255 Pro+', category: 'Audio', sentimentScore: 92, rating: 4.6, reviews: 2438, status: 'Positive' },
-  { id: 'p2', name: 'Noise ColorFit Pro 4', category: 'Wearables', sentimentScore: 87, rating: 4.4, reviews: 1982, status: 'Positive' },
-  { id: 'p3', name: 'Zebronics Wireless Buds', category: 'Audio', sentimentScore: 84, rating: 4.3, reviews: 1420, status: 'Positive' },
-  { id: 'p4', name: 'Apple MacBook Air M3', category: 'Laptops', sentimentScore: 82, rating: 4.6, reviews: 1856, status: 'Positive' },
-  { id: 'p5', name: 'Sony WH-1000XM5 Headphones', category: 'Audio', sentimentScore: 79, rating: 4.5, reviews: 1124, status: 'Positive' },
-];
 
 const TREND_DATA = [
-  { date: 'Jul 1', positive: 1240, neutral: 280, negative: 320 },
-  { date: 'Jul 7', positive: 1320, neutral: 290, negative: 310 },
-  { date: 'Jul 14', positive: 1280, neutral: 310, negative: 330 },
-  { date: 'Jul 21', positive: 1450, neutral: 330, negative: 290 },
-  { date: 'Jul 28', positive: 1510, neutral: 340, negative: 280 },
-  { date: 'Aug 4', positive: 1620, neutral: 350, negative: 270 },
-  { date: 'Aug 11', positive: 1690, neutral: 360, negative: 260 },
-];
-
-const CUSTOMER_LIKES = [
-  { topic: 'Battery life', mentions: '4,823 mentions' },
-  { topic: 'Sound quality', mentions: '3,921 mentions' },
-  { topic: 'Design', mentions: '2,481 mentions' },
-  { topic: 'Value for money', mentions: '3,114 mentions' },
-];
-
-const CUSTOMER_DISLIKES = [
-  { topic: 'Connectivity', mentions: '1,842 mentions' },
-  { topic: 'Packaging', mentions: '921 mentions' },
-  { topic: 'Battery drain', mentions: '1,324 mentions' },
-  { topic: 'Build quality', mentions: '742 mentions' },
+  { date: 'Mon', positive: 62, neutral: 28, negative: 14 },
+  { date: 'Tue', positive: 78, neutral: 20, negative: 5 },
+  { date: 'Wed', positive: 60, neutral: 35, negative: 20 },
+  { date: 'Thu', positive: 72, neutral: 6, negative: 2 },
+  { date: 'Fri', positive: 76, neutral: 22, negative: 10 },
 ];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="px-3 py-2 rounded-xl bg-[#111116] text-white text-xs shadow-2xl border border-slate-700 dark:border-[#282836] space-y-1 font-mono">
-        <p className="font-extrabold text-white">{label}</p>
-        {payload.map((p) => (
-          <div key={p.dataKey} className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color || p.stroke }} />
-            <span className="capitalize">{p.dataKey}:</span>
-            <span className="font-bold">{p.value} reviews</span>
-          </div>
-        ))}
+      <div className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#191C1D] text-[#191C1D] dark:text-white text-xs shadow-2xl border border-[#E5E7EB] dark:border-[#33373B] space-y-1.5 font-mono min-w-[140px]">
+        <p className="font-bold text-[#191C1D] dark:text-white pb-1 border-b border-[#E5E7EB] dark:border-[#2E3132]">{label}</p>
+        {payload.map((p) => {
+          const color = p.stroke || p.color;
+          const isBlack = color === '#000000';
+          const isWhite = color === '#FFFFFF';
+          return (
+            <div key={p.dataKey} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${isBlack
+                      ? 'bg-[#000000] border border-black/20 ring-1 ring-black/10'
+                      : isWhite
+                        ? 'bg-white border border-slate-300'
+                        : 'border border-slate-300 dark:border-slate-600'
+                    }`}
+                  style={{ backgroundColor: color }}
+                />
+                <span className="capitalize text-[#5C5F62] dark:text-[#A0A4A8]">{p.name || p.dataKey}:</span>
+              </div>
+              <span className="font-bold text-[#191C1D] dark:text-white">{p.value}%</span>
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -65,285 +55,382 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export const UserDashboardHome = () => {
   const navigate = useNavigate();
+  const { addToast } = useNotification();
+  const { theme, isDarkMode } = useTheme();
+  const [timeRange, setTimeRange] = useState('7D');
   const [trendRange, setTrendRange] = useState('30D');
 
+  const handleExport = () => {
+    const csvContent = "Metric,Value,Period\nTotal Reviews,124592,+12.4%\nAvg Rating,4.2,0.0%\nPositive Sentiment,68%,+4.2%\nNegative Sentiment,14%,-1.8%\n";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `flipsentiment-overview-${timeRange.toLowerCase()}-${Date.now()}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    addToast(`Overview telemetry (${timeRange}) exported as CSV`, 'success');
+  };
+
   return (
-    <div className="space-y-8 pb-10">
-      
-      {/* Top Greeting Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 pb-12 font-sans bg-[#F8F9FA] dark:bg-[#121415] text-[#191C1D] dark:text-white transition-colors">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Good morning, Seller 👋
+          <h2 className="text-3xl md:text-5xl font-semibold text-[#000000] dark:text-white tracking-tight font-sans">
+            Overview
           </h2>
-          <p className="text-xs text-slate-500 dark:text-[#9494A8] mt-1 font-medium">
-            Here's what's happening with your products today.
+          <p className="text-base md:text-lg text-[#5C5F62] dark:text-[#A0A4A8] mt-2 font-sans">
+            Sentiment analysis across all active product streams.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Time range selector pills */}
+          <div className="flex bg-[#FFFFFF] dark:bg-[#191C1D] border border-[#E5E7EB] dark:border-[#2E3132] rounded-lg overflow-hidden p-1 shadow-2xs">
+            {['7D', '30D', '90D'].map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={`px-3 py-1 text-sm font-mono rounded transition-colors cursor-pointer ${timeRange === range
+                  ? 'bg-[#E7E8E9] dark:bg-[#2E3132] text-[#000000] dark:text-white font-semibold'
+                  : 'text-[#5C5F62] dark:text-[#A0A4A8] hover:bg-[#F3F4F5] dark:hover:bg-[#242729]'
+                  }`}
+              >
+                {range}
+              </button>
+            ))}
+          </div>
+
+          {/* Export Button */}
           <button
-            onClick={() => navigate('/dashboard/sentiment-analysis')}
-            className="px-4 py-2 rounded-xl bg-[#111116] hover:bg-black dark:bg-[#2563EB] text-white font-extrabold text-xs shadow-md transition-transform hover:scale-[1.02] cursor-pointer"
+            onClick={handleExport}
+            className="h-10 px-4 bg-[#000000] dark:bg-white text-white dark:text-black rounded-lg text-xs font-mono hover:bg-[#2E3132] dark:hover:bg-slate-100 transition-colors flex items-center gap-2 cursor-pointer shadow-2xs"
           >
-            ✦ Analyze New Review
+            <Download className="w-4 h-4" />
+            <span>Export</span>
           </button>
         </div>
       </div>
 
-      {/* 1. TOP 5 EXECUTIVE KPI CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatCard
-          icon={Package}
-          label="Products"
-          value="128"
-          change={4.2}
-          index={0}
-          sparklinePoints={[110, 114, 118, 122, 125, 128]}
-        />
-        <StatCard
-          icon={MessageSquareText}
-          label="Reviews"
-          value="57,534"
-          change={12.8}
-          index={1}
-          sparklinePoints={[42, 45, 48, 51, 54, 57]}
-        />
-        <StatCard
-          icon={ThumbsUp}
-          label="Positive"
-          value="68.4%"
-          change={8.4}
-          index={2}
-          sparklinePoints={[58, 60, 62, 64, 66, 68]}
-        />
-        <StatCard
-          icon={ThumbsDown}
-          label="Negative"
-          value="18.2%"
-          change={-2.1}
-          index={3}
-          sparklinePoints={[22, 21, 20, 19, 19, 18]}
-        />
-        <StatCard
-          icon={Star}
-          label="Average Rating"
-          value="4.3"
-          subValue="/ 5 ⭐"
-          change={1.2}
-          index={4}
-          sparklinePoints={[4.0, 4.1, 4.2, 4.2, 4.3, 4.3]}
-        />
+      {/* Bento Grid Layout - 4 KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+
+        {/* KPI 1: Total Reviews */}
+        <div className="bg-[#FFFFFF] dark:bg-[#191C1D] rounded-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none border border-[#E5E7EB] dark:border-[#2E3132] flex flex-col justify-between h-40 relative overflow-hidden group cursor-pointer hover:border-[#000000] dark:hover:border-white transition-all hover:shadow-md">
+          {/* Subtle Cool Slate Accent Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#F0F4F8] dark:to-[#1E293B] opacity-35 pointer-events-none rounded-xl" />
+
+          <div className="flex justify-between items-start relative z-10">
+            <span className="text-xs font-mono text-[#5C5F62] dark:text-[#A0A4A8] uppercase tracking-wider font-medium">
+              Total Reviews
+            </span>
+            <MessageSquare className="w-5 h-5 text-[#000000] dark:text-white opacity-70 group-hover:opacity-100 transition-opacity" />
+          </div>
+          <div className="relative z-10">
+            <div className="text-3xl font-bold text-[#000000] dark:text-white font-sans">
+              124,592
+            </div>
+            <div className="flex items-center gap-1 mt-1">
+              <TrendingUp className="w-3.5 h-3.5 text-[#000000] dark:text-white" />
+              <span className="font-mono text-xs text-[#000000] dark:text-white font-semibold">+12.4%</span>
+              <span className="font-mono text-xs text-[#5C5F62] dark:text-[#A0A4A8] ml-1">vs last period</span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 2: Avg Rating */}
+        <div className="bg-[#FFFFFF] dark:bg-[#191C1D] rounded-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none border border-[#E5E7EB] dark:border-[#2E3132] flex flex-col justify-between h-40 relative overflow-hidden group cursor-pointer hover:border-[#000000] dark:hover:border-white transition-all hover:shadow-md">
+          {/* Subtle Amber Warm Accent Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#FEF3C7] dark:to-[#78350F]/20 opacity-20 pointer-events-none rounded-xl" />
+
+          <div className="flex justify-between items-start relative z-10">
+            <span className="text-xs font-mono text-[#5C5F62] dark:text-[#A0A4A8] uppercase tracking-wider font-medium">
+              Avg Rating
+            </span>
+            <Star className="w-5 h-5 text-[#000000] dark:text-white opacity-70 group-hover:opacity-100 transition-opacity" />
+          </div>
+          <div className="relative z-10">
+            <div className="text-3xl font-bold text-[#000000] dark:text-white font-sans">
+              4.2
+            </div>
+            <div className="flex items-center gap-1 mt-1">
+              <Minus className="w-3.5 h-3.5 text-[#5C5F62] dark:text-[#A0A4A8]" />
+              <span className="font-mono text-xs text-[#5C5F62] dark:text-[#A0A4A8]">0.0%</span>
+              <span className="font-mono text-xs text-[#5C5F62] dark:text-[#A0A4A8] ml-1">vs last period</span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 3: Positive Sentiment */}
+        <div className="bg-[#FFFFFF] dark:bg-[#191C1D] rounded-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none border border-[#E5E7EB] dark:border-[#2E3132] flex flex-col justify-between h-40 relative overflow-hidden group cursor-pointer hover:border-[#000000] dark:hover:border-white transition-all hover:shadow-md">
+          {/* Subtle Icy Mint Accent Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#E0F2F1] dark:to-[#064E3B]/20 opacity-30 pointer-events-none rounded-xl" />
+
+          <div className="flex justify-between items-start relative z-10">
+            <span className="text-xs font-mono text-[#5C5F62] dark:text-[#A0A4A8] uppercase tracking-wider font-medium">
+              Positive
+            </span>
+            <Smile className="w-5 h-5 text-[#000000] dark:text-white opacity-70 group-hover:opacity-100 transition-opacity" />
+          </div>
+          <div className="relative z-10">
+            <div className="text-3xl font-bold text-[#000000] dark:text-white font-sans">
+              68%
+            </div>
+            <div className="flex items-center gap-1 mt-1">
+              <TrendingUp className="w-3.5 h-3.5 text-[#000000] dark:text-white" />
+              <span className="font-mono text-xs text-[#000000] dark:text-white font-semibold">+4.2%</span>
+              <span className="font-mono text-xs text-[#5C5F62] dark:text-[#A0A4A8] ml-1">vs last period</span>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 4: Negative Sentiment */}
+        <div className="bg-[#FFFFFF] dark:bg-[#191C1D] rounded-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none border border-[#E5E7EB] dark:border-[#2E3132] flex flex-col justify-between h-40 relative overflow-hidden group cursor-pointer hover:border-[#000000] dark:hover:border-white transition-all hover:shadow-md">
+          {/* Subtle Soft Rose Accent Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#FFEBEE] dark:to-[#881337]/20 opacity-25 pointer-events-none rounded-xl" />
+
+          <div className="flex justify-between items-start relative z-10">
+            <span className="text-xs font-mono text-[#5C5F62] dark:text-[#A0A4A8] uppercase tracking-wider font-medium">
+              Negative
+            </span>
+            <Frown className="w-5 h-5 text-[#000000] dark:text-white opacity-70 group-hover:opacity-100 transition-opacity" />
+          </div>
+          <div className="relative z-10">
+            <div className="text-3xl font-bold text-[#000000] dark:text-white font-sans">
+              14%
+            </div>
+            <div className="flex items-center gap-1 mt-1">
+              <TrendingDown className="w-3.5 h-3.5 text-[#000000] dark:text-white" />
+              <span className="font-mono text-xs text-[#000000] dark:text-white font-semibold">-1.8%</span>
+              <span className="font-mono text-xs text-[#5C5F62] dark:text-[#A0A4A8] ml-1">vs last period</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 2. MIDDLE SECTION: SENTIMENT OVERVIEW & SENTIMENT TREND */}
+      {/* Main Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Donut Chart: Sentiment Overview */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="p-6 rounded-2xl bg-white dark:bg-[#1C1C26] border border-[#E6E4F0] dark:border-[#282836] shadow-xs flex flex-col justify-between"
-        >
-          <div>
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
-              Sentiment Overview
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-[#9494A8] mt-0.5">
-              Overall catalog sentiment distribution
-            </p>
-          </div>
 
-          <div className="my-4">
-            <SentimentChart positive={68.4} neutral={13.4} negative={18.2} size={190} />
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-100 dark:border-[#282836] text-center">
-            <div className="p-2 rounded-xl bg-[#DCFCE7] dark:bg-[#242432]">
-              <span className="text-[10px] font-bold text-[#15803D] dark:text-[#22C55E] block font-mono">Positive</span>
-              <span className="text-sm font-black text-slate-900 dark:text-white font-mono">68.4%</span>
-            </div>
-
-            <div className="p-2 rounded-xl bg-[#FFEDD5] dark:bg-[#242432]">
-              <span className="text-[10px] font-bold text-[#C2410C] dark:text-[#F59E0B] block font-mono">Neutral</span>
-              <span className="text-sm font-black text-slate-900 dark:text-white font-mono">13.4%</span>
-            </div>
-
-            <div className="p-2 rounded-xl bg-[#FEE2E2] dark:bg-[#242432]">
-              <span className="text-[10px] font-bold text-[#B91C1C] dark:text-[#EF4444] block font-mono">Negative</span>
-              <span className="text-sm font-black text-slate-900 dark:text-white font-mono">18.2%</span>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Line Chart: Sentiment Trend */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-[#1C1C26] border border-[#E6E4F0] dark:border-[#282836] shadow-xs flex flex-col justify-between"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Trajectory Line Chart (Takes up 2 columns) */}
+        <div className="lg:col-span-2 bg-[#FFFFFF] dark:bg-[#191C1D] rounded-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none border border-[#E5E7EB] dark:border-[#2E3132] min-h-[400px] flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-2">
             <div>
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
-                Sentiment Trend
+              <h3 className="text-lg font-medium text-[#000000] dark:text-white font-sans tracking-tight">
+                Sentiment Trajectory
               </h3>
-              <p className="text-xs text-slate-500 dark:text-[#9494A8] mt-0.5">
+              <p className="text-xs text-[#5C5F62] dark:text-[#A0A4A8] mt-0.5 font-mono">
                 Review volume trend by sentiment classification over time
               </p>
             </div>
-
-            {/* Time Filter Pills: 7D | 30D | 3M | 6M | 1Y */}
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-[#242432]">
-              {['7D', '30D', '3M', '6M', '1Y'].map((range) => (
-                <button
-                  key={range}
-                  onClick={() => setTrendRange(range)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer font-mono ${
-                    trendRange === range
-                      ? 'bg-white dark:bg-[#1C1C26] text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-500 dark:text-[#9494A8] hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  {range}
-                </button>
-              ))}
-            </div>
+            <button className="text-[#5C5F62] dark:text-[#A0A4A8] hover:text-[#000000] dark:hover:text-white transition-colors cursor-pointer">
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
           </div>
 
-          <div className="h-64 mt-4 w-full">
+          <div className="h-72 mt-4 w-full flex-1 min-h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={TREND_DATA}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E6E4F0" opacity={0.5} vertical={false} />
-                <XAxis dataKey="date" stroke="#9494A8" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#9494A8" fontSize={11} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#2E3132' : '#E5E7EB'} opacity={0.6} vertical={false} />
+                <XAxis dataKey="date" stroke={isDarkMode ? '#A0A4A8' : '#5C5F62'} fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke={isDarkMode ? '#A0A4A8' : '#5C5F62'} fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} ticks={[0, 50, 100]} />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 600 }} iconType="circle" />
-                <Line type="monotone" dataKey="positive" name="Positive Reviews" stroke="#16A34A" strokeWidth={2.5} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="negative" name="Negative Reviews" stroke="#DC2626" strokeWidth={2.5} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="neutral" name="Neutral Reviews" stroke="#EA580C" strokeWidth={2} dot={{ r: 2 }} />
+                <Legend wrapperStyle={{ fontSize: '11px', fontFamily: 'Geist, monospace', paddingTop: '8px' }} iconType="circle" />
+                <Line
+                  type="monotone"
+                  dataKey="positive"
+                  name="Positive"
+                  stroke={isDarkMode ? '#FFFFFF' : '#000000'}
+                  strokeWidth={2.5}
+                  dot={{ r: 3.5, fill: isDarkMode ? '#FFFFFF' : '#000000' }}
+                  activeDot={{ r: 6, fill: isDarkMode ? '#191C1D' : '#FFFFFF', stroke: isDarkMode ? '#FFFFFF' : '#000000', strokeWidth: 2 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="neutral"
+                  name="Neutral"
+                  stroke={isDarkMode ? '#94A3B8' : '#505F76'}
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: isDarkMode ? '#94A3B8' : '#505F76' }}
+                  activeDot={{ r: 5, fill: isDarkMode ? '#191C1D' : '#FFFFFF', stroke: isDarkMode ? '#94A3B8' : '#505F76', strokeWidth: 2 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="negative"
+                  name="Negative"
+                  stroke={isDarkMode ? '#64748B' : '#CAD5E2'}
+                  strokeWidth={2.5}
+                  dot={{ r: 3.5, fill: isDarkMode ? '#64748B' : '#CAD5E2' }}
+                  activeDot={{ r: 6, fill: isDarkMode ? '#191C1D' : '#FFFFFF', stroke: isDarkMode ? '#64748B' : '#CAD5E2', strokeWidth: 2 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </div>
+
+        {/* Sentiment Distribution Donut (1 column) */}
+        <div className="bg-[#FFFFFF] dark:bg-[#191C1D] rounded-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none border border-[#E5E7EB] dark:border-[#2E3132] min-h-[400px] flex flex-col justify-between">
+          <div>
+            <h3 className="text-base font-bold text-[#191C1D] dark:text-white font-sans">
+              Sentiment Distribution
+            </h3>
+            <p className="text-xs text-[#5C5F62] dark:text-[#A0A4A8] font-mono mt-0.5">
+              Aggregate proportions across catalog
+            </p>
+          </div>
+
+          <div className="my-2 flex justify-center">
+            <SentimentChart positive={68.4} neutral={13.4} negative={18.2} size={185} />
+          </div>
+
+          {/* 3 Bottom KPI Cards */}
+          <div className="grid grid-cols-3 gap-2 text-center font-mono pt-1">
+            <div className="p-2.5 rounded-xl bg-[#F8F9FA] dark:bg-[#242729] border border-[#E5E7EB] dark:border-[#33373B]">
+              <span className="text-[11px] text-[#5C5F62] dark:text-[#A0A4A8] block font-medium">Positive</span>
+              <span className="text-base font-bold text-[#000000] dark:text-white mt-0.5 block">68.4%</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-[#F8F9FA] dark:bg-[#242729] border border-[#E5E7EB] dark:border-[#33373B]">
+              <span className="text-[11px] text-[#5C5F62] dark:text-[#A0A4A8] block font-medium">Neutral</span>
+              <span className="text-base font-bold text-[#5C5F62] dark:text-[#A0A4A8] mt-0.5 block">13.4%</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-[#F8F9FA] dark:bg-[#242729] border border-[#E5E7EB] dark:border-[#33373B]">
+              <span className="text-[11px] text-[#5C5F62] dark:text-[#A0A4A8] block font-medium">Negative</span>
+              <span className="text-base font-bold text-[#5C5F62] dark:text-[#A0A4A8] mt-0.5 block">18.2%</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 3. LOWER SECTION: TOP PERFORMING PRODUCTS & CUSTOMER VOICE */}
+      {/* Bottom Row: Trending Topics & Signal Snapshot */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Top Performing Products (Show 5 products) */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="p-6 rounded-2xl bg-white dark:bg-[#1C1C26] border border-[#E6E4F0] dark:border-[#282836] shadow-xs space-y-4"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                Top Performing Products
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-[#9494A8] mt-0.5">
-                Top catalog items by sentiment score & rating
-              </p>
-            </div>
+
+        {/* Trending Topics Keyword Cloud */}
+        <div className="bg-[#FFFFFF] dark:bg-[#191C1D] rounded-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none border border-[#E5E7EB] dark:border-[#2E3132] min-h-[320px] flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-[#000000] dark:text-white font-sans">
+              Trending Topics
+            </h3>
+            <span className="px-2.5 py-1 bg-[#F3F4F5] dark:bg-[#242729] text-[#5C5F62] dark:text-[#A0A4A8] text-xs rounded font-mono">
+              Top 15
+            </span>
+          </div>
+
+          {/* Word Cloud layout matching exact mockup */}
+          <div className="flex flex-wrap gap-3 items-center justify-center flex-1 py-4">
+            <span className="text-3xl font-bold text-[#000000] dark:text-white px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors font-sans">
+              Integration
+            </span>
+            <span className="text-lg text-[#5C5F62] dark:text-[#A0A4A8] px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors font-sans">
+              Pricing
+            </span>
+            <span className="text-2xl font-medium text-[#000000] dark:text-white px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors border-b-2 border-[#7E7576] font-sans">
+              Customer Support
+            </span>
+            <span className="text-sm text-[#5C5F62] dark:text-[#A0A4A8] px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors font-sans">
+              Onboarding
+            </span>
+            <span className="text-xl font-semibold text-[#000000] dark:text-white px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors font-sans">
+              Speed
+            </span>
+            <span className="text-base text-[#5C5F62] dark:text-[#A0A4A8] px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors font-sans">
+              UI Design
+            </span>
+            <span className="text-4xl font-bold text-[#000000] dark:text-white px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors relative group font-sans">
+              Reliability
+              <span className="absolute -top-1 -right-2 w-2.5 h-2.5 bg-[#000000] dark:bg-white rounded-full" />
+            </span>
+            <span className="text-sm text-[#7E7576] dark:text-[#64748B] px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors line-through decoration-[#7E7576] font-sans">
+              Downtime
+            </span>
+            <span className="text-lg text-[#000000] dark:text-white px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors font-sans">
+              Analytics
+            </span>
+            <span className="text-xs text-[#5C5F62] dark:text-[#A0A4A8] px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors font-sans">
+              Export
+            </span>
+            <span className="text-xl font-medium text-[#000000] dark:text-white px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors font-sans">
+              API Access
+            </span>
+            <span className="text-base text-[#5C5F62] dark:text-[#A0A4A8] px-2 py-1 cursor-pointer hover:bg-[#F3F4F5] dark:hover:bg-[#242729] rounded transition-colors font-sans">
+              Documentation
+            </span>
+          </div>
+
+          <div className="pt-3 border-t border-[#E5E7EB] dark:border-[#2E3132] flex items-center justify-between text-xs font-mono text-[#5C5F62] dark:text-[#A0A4A8]">
+            <span>Active stream monitoring</span>
             <button
-              onClick={() => navigate('/dashboard/products')}
-              className="text-xs font-bold text-[#111116] dark:text-[#8B5CF6] hover:underline flex items-center gap-1 cursor-pointer"
+              onClick={() => navigate('/dashboard/analytics')}
+              className="text-[#000000] dark:text-white font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              Analytics Deep Dive <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Signal Snapshot (Quotes with left indicator bars) */}
+        <div className="bg-[#FFFFFF] dark:bg-[#191C1D] rounded-xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-none border border-[#E5E7EB] dark:border-[#2E3132] min-h-[320px] flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-[#000000] dark:text-white font-sans">
+              Signal Snapshot
+            </h3>
+            <button
+              onClick={() => navigate('/dashboard/history')}
+              className="text-xs font-mono text-[#5C5F62] dark:text-[#A0A4A8] hover:text-[#000000] dark:hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
             >
               View All <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="space-y-3">
-            {TOP_PRODUCTS_DATA.map((prod) => (
-              <div key={prod.id} className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#242432] border border-[#E6E4F0] dark:border-[#282836] flex items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">{prod.name}</h4>
-                  <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono mt-1">
-                    <span className="flex items-center gap-0.5 text-amber-400 font-bold"><Star className="w-3 h-3 fill-amber-400" /> {prod.rating}</span>
-                    <span>• {prod.reviews.toLocaleString()} reviews</span>
-                  </div>
+          <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+            {/* Review Item 1 */}
+            <div className="p-3.5 bg-[#F8F9FA] dark:bg-[#242729] rounded-lg border border-[#EDEEEF] dark:border-[#33373B] flex gap-3.5 items-start group hover:border-[#7E7576] dark:hover:border-[#5C5F62] transition-colors">
+              <div className="w-1.5 h-full min-h-[44px] bg-[#000000] dark:bg-white rounded-full mt-1 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="text-xs font-semibold text-[#000000] dark:text-white font-sans">
+                    "Game-changing reliability."
+                  </span>
+                  <span className="font-mono text-[10px] text-[#5C5F62] dark:text-[#848484] shrink-0 ml-2">2h ago</span>
                 </div>
-
-                <div className="w-36 space-y-1">
-                  <div className="flex items-center justify-between text-[11px] font-mono font-bold">
-                    <span className="text-slate-500 dark:text-slate-400">Sentiment</span>
-                    <span className="text-[#16A34A] dark:text-[#22C55E]">{prod.sentimentScore}%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                    <div className="h-full rounded-full bg-[#16A34A] dark:bg-[#22C55E]" style={{ width: `${prod.sentimentScore}%` }} />
-                  </div>
-                </div>
+                <p className="text-xs text-[#5C5F62] dark:text-[#A0A4A8] line-clamp-2 leading-relaxed font-sans">
+                  The new infrastructure upgrade has completely eliminated the latency issues we were seeing during peak hours.
+                </p>
               </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Customer Voice / What Customers Are Saying */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="p-6 rounded-2xl bg-white dark:bg-[#1C1C26] border border-[#E6E4F0] dark:border-[#282836] shadow-xs space-y-4 flex flex-col justify-between"
-        >
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#111116] dark:text-[#8B5CF6] font-mono">
-                CUSTOMER VOICE
-              </span>
-            </div>
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-              What Customers Are Saying
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-[#9494A8] mt-0.5">
-              Extracted praise & complaint topics from NLP analysis
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* 👍 Customers like */}
-            <div className="p-4 rounded-xl bg-[#DCFCE7] dark:bg-emerald-950/30 border border-[#BBF7D0] dark:border-emerald-900/40 space-y-2">
-              <h4 className="text-xs font-bold text-[#15803D] dark:text-[#22C55E] flex items-center gap-1.5">
-                <ThumbsUp className="w-3.5 h-3.5" />
-                👍 Customers like
-              </h4>
-              <ul className="space-y-1 text-xs text-slate-800 dark:text-slate-200 font-medium">
-                {CUSTOMER_LIKES.map((item, i) => (
-                  <li key={i} className="flex items-center justify-between">
-                    <span>• {item.topic}</span>
-                    <span className="text-[9px] font-mono text-[#15803D] dark:text-[#22C55E] font-bold">{item.mentions}</span>
-                  </li>
-                ))}
-              </ul>
             </div>
 
-            {/* ⚠ Customers dislike */}
-            <div className="p-4 rounded-xl bg-[#FEE2E2] dark:bg-rose-950/30 border border-[#FECACA] dark:border-rose-900/40 space-y-2">
-              <h4 className="text-xs font-bold text-[#B91C1C] dark:text-[#EF4444] flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                ⚠ Customers dislike
-              </h4>
-              <ul className="space-y-1 text-xs text-slate-800 dark:text-slate-200 font-medium">
-                {CUSTOMER_DISLIKES.map((item, i) => (
-                  <li key={i} className="flex items-center justify-between">
-                    <span>• {item.topic}</span>
-                    <span className="text-[9px] font-mono text-[#B91C1C] dark:text-[#EF4444] font-bold">{item.mentions}</span>
-                  </li>
-                ))}
-              </ul>
+            {/* Review Item 2 */}
+            <div className="p-3.5 bg-[#F8F9FA] dark:bg-[#242729] rounded-lg border border-[#EDEEEF] dark:border-[#33373B] flex gap-3.5 items-start group hover:border-[#7E7576] dark:hover:border-[#5C5F62] transition-colors">
+              <div className="w-1.5 h-full min-h-[44px] bg-[#505F76] dark:bg-[#94A3B8] rounded-full mt-1 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="text-xs font-semibold text-[#000000] dark:text-white font-sans">
+                    "Solid update, missing export."
+                  </span>
+                  <span className="font-mono text-[10px] text-[#5C5F62] dark:text-[#848484] shrink-0 ml-2">5h ago</span>
+                </div>
+                <p className="text-xs text-[#5C5F62] dark:text-[#A0A4A8] line-clamp-2 leading-relaxed font-sans">
+                  Appreciate the new UI layout, but moving the CSV export to a secondary menu adds friction to my daily workflow.
+                </p>
+              </div>
+            </div>
+
+            {/* Review Item 3 */}
+            <div className="p-3.5 bg-[#F8F9FA] dark:bg-[#242729] rounded-lg border border-[#EDEEEF] dark:border-[#33373B] flex gap-3.5 items-start group hover:border-[#7E7576] dark:hover:border-[#5C5F62] transition-colors">
+              <div className="w-1.5 h-full min-h-[44px] bg-[#CAD5E2] dark:bg-[#64748B] rounded-full mt-1 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="text-xs font-semibold text-[#000000] dark:text-white font-sans">
+                    "Support response slow."
+                  </span>
+                  <span className="font-mono text-[10px] text-[#5C5F62] dark:text-[#848484] shrink-0 ml-2">1d ago</span>
+                </div>
+                <p className="text-xs text-[#5C5F62] dark:text-[#A0A4A8] line-clamp-2 leading-relaxed font-sans">
+                  Still waiting on a resolution for ticket #4829. Usually faster, not sure what the delay is this week.
+                </p>
+              </div>
             </div>
           </div>
-
-          <button
-            onClick={() => navigate('/dashboard/insights')}
-            className="w-full py-2.5 rounded-xl bg-[#111116] hover:bg-black dark:bg-[#2563EB] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md cursor-pointer mt-2"
-          >
-            <span>Explore AI Customer Insights</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
